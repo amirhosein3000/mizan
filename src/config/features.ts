@@ -40,7 +40,7 @@ export const FEATURES: FeatureDef[] = [
   { id: "xray", titleFa: "اشعه‌ی ایکس قیمت", descriptionFa: "قفسه رو اسکن کن، رنگ‌ها رو ببین", enabled: true, href: "/xray", icon: "xray" },
   { id: "verdict", titleFa: "داوری قیمت", descriptionFa: "خوبه، منصفانه یا گرون؟", enabled: true, icon: "gavel" },
   { id: "alternatives", titleFa: "جایگزین‌ها", descriptionFa: "مدل‌های هم‌رده‌ی ارزون‌تر", enabled: true, icon: "shuffle" },
-  { id: "chat", titleFa: "بپرس از ترازو", descriptionFa: "گفتگو درباره‌ی کالا", enabled: true, icon: "chat" },
+  { id: "chat", titleFa: "بپرس از میزان", descriptionFa: "گفتگو درباره‌ی کالا", enabled: true, icon: "chat" },
   { id: "history", titleFa: "ذخیره‌ها", descriptionFa: "تاریخچه و لیست خرید", enabled: true, href: "/history", icon: "history" },
   { id: "savings", titleFa: "کارت صرفه‌جویی", descriptionFa: "صرفه‌جویی‌ات رو به اشتراک بذار", enabled: true, icon: "sparkles" },
   // ---- optional modules ----

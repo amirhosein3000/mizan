@@ -1,6 +1,6 @@
-# Tarazoo — production image (Next.js standalone output).
-# Build:  docker build -t tarazoo .
-# Run:    docker run -p 3000:3000 -v tarazoo-data:/app/data --env-file .env tarazoo
+# Mizan — production image (Next.js standalone output).
+# Build:  docker build -t mizan .
+# Run:    docker run -p 3000:3000 -v mizan-data:/app/data --env-file .env mizan
 
 FROM node:24-bookworm-slim AS deps
 WORKDIR /app
@@ -27,7 +27,7 @@ ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000 \
     HOSTNAME=0.0.0.0 \
-    DATABASE_PATH=/app/data/tarazoo.db
+    DATABASE_PATH=/app/data/mizan.db
 RUN mkdir -p /app/data && chown -R node:node /app
 COPY --from=build --chown=node:node /app/public ./public
 COPY --from=build --chown=node:node /app/.next/standalone ./

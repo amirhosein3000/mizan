@@ -1,11 +1,11 @@
-# Tarazoo (ترازو)
+# Mizan (میزان)
 
-> **ترازو** دستیار هوشمند خرید حضوریه: توی مغازه از کالا عکس بگیر، بارکدش رو اسکن کن یا اسمش رو بنویس؛
-> ترازو قیمت آنلاینش رو نشونت میده، میگه قیمت مغازه خوبه، منصفانه‌ست یا گرون، یه جمله‌ی آماده برای چونه زدن
+> **میزان** دستیار هوشمند خرید حضوریه: توی مغازه از کالا عکس بگیر، بارکدش رو اسکن کن یا اسمش رو بنویس؛
+> میزان قیمت آنلاینش رو نشونت میده، میگه قیمت مغازه خوبه، منصفانه‌ست یا گرون، یه جمله‌ی آماده برای چونه زدن
 > بهت میده و گزینه‌های ارزون‌تر رو پیشنهاد می‌کنه. با «اشعه‌ی ایکس قیمت» دوربین رو بگیر سمت قفسه و کنار
 > هر کالا یه برچسب سبز، زرد یا قرمز ببین. ساخته‌شده برای هکاتون ترب.
 
-**Tarazoo** is a smart assistant for in-person shopping, built for the Torob hackathon challenge
+**Mizan** is a smart assistant for in-person shopping, built for the Torob hackathon challenge
 «دستیار هوشمند برای خرید حضوری». Mobile-first, Persian/RTL, installable PWA.
 
 ## What it does
@@ -42,8 +42,8 @@ npm run check          # eslint + tsc + vitest + next build
 Docker image (Next.js standalone). Mount a persistent volume at `/app/data` for the SQLite file.
 
 ```bash
-docker build -t tarazoo .
-docker run -p 3000:3000 -v tarazoo-data:/app/data --env-file .env tarazoo
+docker build -t mizan .
+docker run -p 3000:3000 -v mizan-data:/app/data --env-file .env mizan
 ```
 
 Liara steps: see [docs/deploy.md](docs/deploy.md).

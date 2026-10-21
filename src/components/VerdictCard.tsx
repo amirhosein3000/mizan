@@ -47,7 +47,7 @@ export function VerdictCard({
         <LevelIcon level={verdict.level} warn={verdict.suspiciouslyCheap || verdict.abovePrintedPrice} />
         <div className="min-w-0">
           <div className="text-[19px] font-black leading-7">{verdict.title}</div>
-          <div className="text-[13px] opacity-90">داوری ترازو</div>
+          <div className="text-[13px] opacity-90">داوری میزان</div>
         </div>
       </div>
 

@@ -50,7 +50,7 @@ export function HomeScreen() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="grid size-10 place-items-center rounded-2xl bg-gradient-to-br from-brand to-[#8a5cf6] text-[20px] font-black text-white">
-            ت
+            م
           </span>
           <div>
             <div className="text-[19px] font-black leading-6">{APP_NAME}</div>

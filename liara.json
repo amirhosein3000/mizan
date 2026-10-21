@@ -1,5 +1,5 @@
 {
-  "app": "tarazoo",
+  "app": "mizan",
   "platform": "docker",
   "port": 3000,
   "disks": [

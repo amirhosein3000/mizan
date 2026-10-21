@@ -1,6 +1,6 @@
-// Tarazoo service worker: makes the app installable and keeps the shell
+// Mizan service worker: makes the app installable and keeps the shell
 // usable on flaky store Wi-Fi. API calls are never cached (prices must be fresh).
-const CACHE = "tarazoo-v1";
+const CACHE = "mizan-v1";
 const SHELL = ["/", "/scan", "/xray", "/history", "/manifest.webmanifest", "/icons/icon-192.png"];
 
 self.addEventListener("install", (event) => {

@@ -29,28 +29,28 @@ const BOOTSTRAP_SQL = [
 ];
 
 type DB = BetterSQLite3Database<typeof schema>;
-const g = globalThis as unknown as { __tarazooDb?: DB; __tarazooSqlite?: Database.Database; __tarazooTables?: Set<string> };
+const g = globalThis as unknown as { __mizanDb?: DB; __mizanSqlite?: Database.Database; __mizanTables?: Set<string> };
 
 export function getDb(): DB {
-  if (g.__tarazooDb) return g.__tarazooDb;
+  if (g.__mizanDb) return g.__mizanDb;
   // turbopackIgnore: the DB path is runtime config, not a file to trace into the bundle.
-  const file = resolve(/*turbopackIgnore: true*/ process.env.DATABASE_PATH ?? "./data/tarazoo.db");
+  const file = resolve(/*turbopackIgnore: true*/ process.env.DATABASE_PATH ?? "./data/mizan.db");
   mkdirSync(dirname(file), { recursive: true });
   const sqlite = new Database(file);
   sqlite.pragma("journal_mode = WAL");
   for (const stmt of BOOTSTRAP_SQL) sqlite.exec(stmt);
-  g.__tarazooSqlite = sqlite;
-  g.__tarazooDb = drizzle(sqlite, { schema });
-  return g.__tarazooDb;
+  g.__mizanSqlite = sqlite;
+  g.__mizanDb = drizzle(sqlite, { schema });
+  return g.__mizanDb;
 }
 
 /** Run a module's CREATE ... IF NOT EXISTS statements once per process. */
 export function ensureTables(key: string, statements: string[]): DB {
   const db = getDb();
-  g.__tarazooTables ??= new Set();
-  if (!g.__tarazooTables.has(key)) {
-    for (const stmt of statements) g.__tarazooSqlite!.exec(stmt);
-    g.__tarazooTables.add(key);
+  g.__mizanTables ??= new Set();
+  if (!g.__mizanTables.has(key)) {
+    for (const stmt of statements) g.__mizanSqlite!.exec(stmt);
+    g.__mizanTables.add(key);
   }
   return db;
 }

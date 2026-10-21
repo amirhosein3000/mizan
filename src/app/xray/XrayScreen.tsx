@@ -183,7 +183,7 @@ export function XrayScreen() {
           {phase === "scanning" && (
             <div className="pointer-events-none absolute inset-0 bg-[#5b47e0]/15">
               <div className="xray-sweep absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-transparent via-[#8a5cf6]/70 to-transparent" />
-              <div className="absolute inset-x-0 bottom-4 text-center text-sm font-bold">ترازو داره قیمت‌ها رو می‌سنجه…</div>
+              <div className="absolute inset-x-0 bottom-4 text-center text-sm font-bold">میزان داره قیمت‌ها رو می‌سنجه…</div>
             </div>
           )}
 

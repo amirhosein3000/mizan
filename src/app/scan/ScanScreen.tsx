@@ -147,7 +147,7 @@ function PhotoTab({ onTypeInstead }: { onTypeInstead: () => void }) {
         {busy && (
           <div className="absolute inset-0 bg-brand/25">
             <div className="xray-sweep absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-transparent via-white/60 to-transparent" />
-            <span className="absolute inset-x-0 bottom-4 text-center text-sm font-bold text-white drop-shadow">ترازو داره نگاه می‌کنه…</span>
+            <span className="absolute inset-x-0 bottom-4 text-center text-sm font-bold text-white drop-shadow">میزان داره نگاه می‌کنه…</span>
           </div>
         )}
       </button>

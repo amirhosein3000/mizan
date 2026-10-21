@@ -5,9 +5,9 @@ Update this file at the end of every session/milestone: what's done, what's next
 ## Status — 2026-10-21
 
 ### Prompt 0 (kickoff) — DONE
-- Name: **Tarazoo (ترازو)**, "the scales": the app weighs the store price against the online market (the green/yellow/red verdict). Renamed from Chooneh on 2026-10-21 at the user's request; other candidates were Arzoon (ارزون) and Mizan (میزان).
+- Name: **Mizan (میزان)**, "the balance / the right measure": the app weighs the store price against the online market (the green/yellow/red verdict). Renamed from Chooneh on 2026-10-21 at the user's request. Tarazoo (ترازو) was rejected because the user's Wallex hackathon project already uses that name; Arzoon (ارزون) was the other candidate.
   Other candidates: Nerkhyab (نرخ‌یاب, hard in English) and Ayneh (آینه, too generic).
-- Private repo: https://github.com/amirhosein3000/tarazoo
+- Private repo: https://github.com/amirhosein3000/mizan
 - Next.js 16.4 + Tailwind v4 PWA, RTL Persian, Vazirmatn, theme tokens, bottom nav with a centre X-ray button.
 - Price adapter: `PriceProvider` + `MockPriceProvider` (292 generated products: 73 mobile, 41 laptop, 68 appliance, 110 grocery) + `TorobPriceProvider` stub.
 - LLM adapter: OpenAI-compatible client, MOCK mode, backup provider fallback, Persian error messages.

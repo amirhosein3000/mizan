@@ -1,6 +1,6 @@
 /**
  * Generates the PWA icons from an original SVG (no fonts, pure shapes):
- * a white balance scale (ترازو) with a green and a red pan and a yellow pivot, on a violet gradient.
+ * a white balance scale (میزان) with a green and a red pan and a yellow pivot, on a violet gradient.
  *
  *   npm run icons
  */

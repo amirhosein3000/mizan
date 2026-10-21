@@ -1,4 +1,4 @@
-# CLAUDE.md — Tarazoo (ترازو)
+# CLAUDE.md — Mizan (میزان)
 
 Smart assistant for **in-person shopping**, built for the Torob hackathon challenge
 «دستیار هوشمند برای خرید حضوری». A shopper in a physical store identifies a product
@@ -23,7 +23,7 @@ Start every session by reading this file and `docs/progress.md`. Update `docs/pr
 
 Home → (photo | barcode | text) → product page → online price range → enter store price →
 verdict card (+ «نشون دادن به فروشنده» negotiation sheet + checklist) → «خریدمش!» savings card →
-alternatives → «بپرس از ترازو» chat → saved in history.
+alternatives → «بپرس از میزان» chat → saved in history.
 Hero: Home → ایکس‌ری → «قفسه‌ی نمونه» (sample shelf, works without camera) → badges → tap → full verdict.
 
 ## Stack
@@ -44,7 +44,7 @@ npm run lint | typecheck | test | build
 npm run seed         # regenerate src/data/mock/products.json (deterministic)
 npm run icons        # regenerate public/icons/* from the SVG in scripts/generate-icons.ts
 npm run smoke:llm    # build + exercise the LIVE LLM path and failure modes against scripts/fake-llm.mjs (no key needed)
-docker build -t tarazoo . && docker run -p 3000:3000 -v tarazoo-data:/app/data tarazoo
+docker build -t mizan . && docker run -p 3000:3000 -v mizan-data:/app/data mizan
 ```
 
 ## Folder layout
@@ -84,7 +84,7 @@ liara.json, Dockerfile      deployment (standalone Next server, SQLite on a disk
   Chat: user bubbles `self-end` (left), assistant `self-start` (right).
 - **Numbers & prices**: never print raw numbers. Use `formatToman()` ("۱٬۲۳۴٬۵۶۷ تومان"), `formatTomanShort()` ("۳۴٫۵ میلیون"), `formatNumber()`, `formatPercent()`. Parse user input with `parsePrice()` (accepts Persian digits, «میلیون», «هزار», ریال→تومان). All prices are integers in **Toman**.
 - Latin model names (e.g. "Galaxy A56") keep Latin digits; everything computed/formatted uses Persian digits.
-- **Persian copy voice**: friendly colloquial-polite («بزن ببینیم…», «گرونه!»), short. Assistant name: «ترازو» (the scales: it weighs the store price against the market). «چونه زدن» in copy means haggling, not the app. Keep copy in components; persona lines in `lib/persona.ts`.
+- **Persian copy voice**: friendly colloquial-polite («بزن ببینیم…», «گرونه!»), short. Assistant name: «میزان» (the balance: it weighs the store price against the market). «چونه زدن» in copy means haggling, not the app. Keep copy in components; persona lines in `lib/persona.ts`.
 - **Errors**: API returns `{ error: { code, message } }` with a Persian `message`; client shows it via `errorMessage(err)` / `<ErrorNote>`. Wrap every route handler in `handle()` (catches LLM errors → 503 with friendly text; rethrows Next internals).
 - **Overlays/sheets** go through `<Portal>` (animated parents create containing blocks for `position: fixed`).
 - **Mock data must look mock**: `<ModeBadge>` shows «داده‌ی نمایشی» whenever `PRICE_PROVIDER=mock`.
