@@ -5,6 +5,7 @@ import { use, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Bookmark, BookmarkCheck, ChevronDown, Info, List, Map as MapIcon, PhoneCall, Store, Sparkles } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
+import { MallView } from "@/components/MallView";
 import { NotFoundState } from "@/components/NotFoundState";
 import { CallSetupSheet } from "@/components/CallSetupSheet";
 import { ChatPanel } from "@/components/ChatPanel";
@@ -26,6 +27,7 @@ import { formatNumber, parsePrice } from "@/lib/format";
 import { APP_NAME, ASSISTANT_NAME } from "@/lib/persona";
 import { ageLabel } from "@/lib/shop/freshness";
 import { HIDDEN_LABEL, type HiddenReason, type RankedShop } from "@/lib/shop/rank";
+import { mallGroups } from "@/lib/shop/mall";
 import { useShopper, withCtx } from "@/lib/shopper-store";
 import { useApi } from "@/lib/use-api";
 import { computeVerdict } from "@/lib/verdict";
@@ -97,6 +99,7 @@ export function ProductScreen({ params }: { params: Promise<{ id: string }> }) {
     return list;
   }, [shown, sort]);
 
+  const malls = useMemo(() => mallGroups(shown?.shops ?? [], 3, shown?.product.price?.min), [shown]);
   const all = useMemo(() => [...(shown?.shops ?? []), ...(shown?.maybe ?? [])], [shown]);
   const openNow = useMemo(() => all.filter((s) => s.status.state !== "closed"), [all]);
   // All closed (evening / Friday): the agent schedules the calls for opening time.
@@ -277,6 +280,19 @@ export function ProductScreen({ params }: { params: Promise<{ id: string }> }) {
             )}
           </div>
         </section>
+
+        {/* One passage, many shops */}
+        {view === "list" && malls.length > 0 && (
+          <MallView
+            groups={malls}
+            selected={selected}
+            onToggle={toggle}
+            onCallAll={(ids) => {
+              setSelected(ids);
+              setCalling(true);
+            }}
+          />
+        )}
 
         {/* Shops that may have it */}
         {shown.maybe.length > 0 && (

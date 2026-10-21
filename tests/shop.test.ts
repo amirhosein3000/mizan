@@ -126,3 +126,28 @@ describe("sanitizeContext", () => {
     expect(sanitizeContext(ctx)).toEqual(ctx);
   });
 });
+
+describe("mall view", () => {
+  it("orders floors", async () => {
+    const { floorLevel } = await import("@/lib/shop/mall");
+    expect(floorLevel("همکف")).toBe(0);
+    expect(floorLevel("زیر همکف")).toBe(-1);
+    expect(floorLevel("منفی ۲")).toBe(-2);
+    expect(floorLevel("سوم")).toBe(3);
+    expect(floorLevel("۴")).toBe(4);
+    expect(floorLevel("٦")).toBe(6);
+    expect(floorLevel("۱۱۱")).toBeNull();
+    expect(floorLevel("بالا")).toBeNull();
+  });
+
+  it("treats spelling variants of a passage as one building", async () => {
+    const { mallKey } = await import("@/lib/shop/mall");
+    const k = mallKey("پاساژ علاالدین");
+    expect(mallKey("پاساژ علاءالدین")).toBe(k);
+    expect(mallKey("پاساژ علائدین")).toBe(k);
+    expect(mallKey("مجتمع تجاری علاالدین تهران")).toBe(k);
+    expect(mallKey("پاساژ علاالدین ۳")).not.toBe(k);
+    expect(mallKey("پاساژ علاالدین۳")).toBe(mallKey("مجتمع علاالدین ۳"));
+    expect(mallKey("پاساژ چهارسو")).toBe(mallKey("پاساژ چارسو"));
+  });
+});

@@ -2,6 +2,21 @@
 
 Update this file at the end of every session/milestone: what's done, what's next, open issues.
 
+## Hero moments — 2026-10-22
+
+- **پاساژنما** (`components/MallView.tsx`, `lib/shop/mall.ts`): on the product page, passages holding ≥3 of the
+  listing shops are drawn as a building (floors top→bottom, entrance), shops as chips with price, open dot and
+  «ارزون‌ترین»; tap to select, or «میزان به N فروشگاهِ همین پاساژ زنگ بزنه» (≤5, open first, then cheapest).
+  Mall-name spelling variants (علاءالدین/علائدین/مجتمع تجاری … تهران، چهارسو) collapse to one building.
+- **کارنامه‌ی میزان** (`components/MissionHeroes.tsx`): after the calls end — calls/answered, dead-end trips
+  avoided, time freed (3 min per call + round trips to shops that didn't have it), money vs. Tehran median or the
+  priciest answer. Copy says the times are estimates.
+- **کارت فروشنده**: full-screen counter card — confirmed price (call or seller panel), call time, hold, 4-digit code.
+- **بفرست برای کسی**: Web Share (copy fallback) of shop, exact address, price, Neshan link.
+- **Plan B on a closed shop** (from the UX pass) is part of the demo script too.
+- Verified: headless 390px shots of each; `npm run check` green (56 tests); standalone production server smoke
+  (health, product, shop plan B, pages → 200).
+
 ## UX pass — 2026-10-22 (whole demo path reviewed at 390px with headless Chrome)
 
 Fixed / improved:

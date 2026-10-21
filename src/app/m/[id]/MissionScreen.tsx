@@ -9,6 +9,7 @@ import {
   ChevronDown,
   CircleSlash,
   Clock,
+  IdCard,
   Navigation,
   PhoneCall,
   PhoneOff,
@@ -19,6 +20,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
+import { MissionReport, SharePlanButton, WalkInCard } from "@/components/MissionHeroes";
 import { MISSION_STATUS } from "@/components/MissionRow";
 import { ProductRow } from "@/components/ProductRow";
 import { AddressLine, CallSelfButton, hhmmFromTs, MapButtons, OpenPill, StockLine, TrafficHint, TravelLine } from "@/components/shop";
@@ -135,6 +137,7 @@ export function MissionScreen({ params }: { params: Promise<{ id: string }> }) {
         </div>
 
         {/* Recommendation */}
+        {m.best && !live && m.calls.every((c) => c.state === "done") && <MissionReport m={m} best={m.best} />}
         {m.best && <BestCard m={m} best={m.best} busy={busy} act={act} />}
 
         {m.status === "no_luck" && (
@@ -349,6 +352,7 @@ function CallCard({ c, shops, replacedName }: { c: CallView; shops: RankedShop[]
 function BestCard({ m, best, busy, act }: { m: MissionView; best: RankedShop; busy: boolean; act: (a: MissionAction) => Promise<void> }) {
   const [checkOpen, setCheckOpen] = useState(false);
   const [reporting, setReporting] = useState(false);
+  const [showCard, setShowCard] = useState(false);
   const c = best.confirmation;
   const now = useNow();
   // Visit plan: arrive before the hold ends / the shop closes.
@@ -408,7 +412,20 @@ function BestCard({ m, best, busy, act }: { m: MissionView; best: RankedShop; bu
         <MapButtons shop={best.shop} />
         <div className="flex gap-2">
           <CallSelfButton shop={best.shop} />
+          <SharePlanButton m={m} best={best} />
         </div>
+        {c?.available && best.priceSource === "confirmed" && m.status !== "bought" && (
+          <button
+            onClick={() => setShowCard(true)}
+            className="flex w-full items-center gap-3 rounded-2xl border-2 border-dashed border-brand/40 bg-brand-soft px-3 py-2.5 text-start active:bg-brand/15"
+          >
+            <IdCard className="size-6 shrink-0 text-brand" />
+            <span className="min-w-0 flex-1">
+              <span className="block text-[13.5px] font-extrabold text-brand-ink">رسیدی؟ کارت فروشنده رو نشون بده</span>
+              <span className="block text-[11.5px] text-muted">قیمت تأییدشده، ساعت هماهنگی و کد پیگیری، درشت و خوانا</span>
+            </span>
+          </button>
+        )}
 
         <div className="rounded-2xl bg-surface-2">
           <button className="flex w-full items-center justify-between px-3 py-2.5 text-[13.5px] font-bold" onClick={() => setCheckOpen((v) => !v)} aria-expanded={checkOpen}>
@@ -460,6 +477,7 @@ function BestCard({ m, best, busy, act }: { m: MissionView; best: RankedShop; bu
           </p>
         )}
       </div>
+      {showCard && <WalkInCard m={m} best={best} onClose={() => setShowCard(false)} />}
       {reporting && (
         <ReportBought
           m={m}
