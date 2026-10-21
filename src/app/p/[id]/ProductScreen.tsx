@@ -17,7 +17,7 @@ import { CATEGORY_LABEL } from "@/components/icons";
 import { isEnabled } from "@/config/features";
 import { api, errorMessage } from "@/lib/client-api";
 import { formatToman, parsePrice, timeAgo } from "@/lib/format";
-import { ASSISTANT_NAME } from "@/lib/persona";
+import { APP_NAME, ASSISTANT_NAME } from "@/lib/persona";
 import type { Offer, PriceSummary, Product, ProductWithSummary } from "@/lib/price/types";
 import { computeVerdict } from "@/lib/verdict";
 
@@ -62,7 +62,7 @@ export function ProductScreen({ params }: { params: Promise<{ id: string }> }) {
       : null;
 
   useEffect(() => {
-    if (product) document.title = `${product.nameFa} · چونه`;
+    if (product) document.title = `${product.nameFa} · ${APP_NAME}`;
   }, [product]);
 
   // Record the look (and the verdict once there is one) in history.

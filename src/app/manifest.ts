@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "چونه — دستیار خرید حضوری",
-    short_name: "چونه",
+    name: "ترازو — دستیار خرید حضوری",
+    short_name: "ترازو",
     description: "قیمت مغازه رو با قیمت آنلاین مقایسه کن، اشعه‌ی ایکس قیمت بگیر و با خیال راحت چونه بزن.",
     id: "/",
     start_url: "/",

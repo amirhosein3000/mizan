@@ -96,7 +96,7 @@ export function SavingsSheet({
     try {
       const blob = await drawCard(input.productName, s.best, paid);
       if (!blob) return;
-      const file = new File([blob], "chooneh-savings.png", { type: "image/png" });
+      const file = new File([blob], "tarazoo-savings.png", { type: "image/png" });
       const text = `امروز ${formatToman(s.best)} صرفه‌جویی کردم! با ${APP_NAME} 😉`;
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file], text }).catch(() => {});

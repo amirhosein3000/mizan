@@ -62,7 +62,7 @@ for (const mode of modes) {
       ? null
       : spawn(process.execPath, ["scripts/fake-llm.mjs", String(LLM_PORT), mode === "fallback" ? "ok" : mode], { stdio: "ignore" });
   const primaryDown = mode === "unreachable" || mode === "fallback";
-  const db = join(tmpdir(), `chooneh-smoke-${mode}.db`);
+  const db = join(tmpdir(), `tarazoo-smoke-${mode}.db`);
   const app = spawn(process.execPath, ["server.js"], {
     cwd: standalone,
     stdio: "ignore",

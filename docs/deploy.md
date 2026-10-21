@@ -1,7 +1,7 @@
 # Deploy
 
 The app ships as one Docker image (Next.js `standalone` output). State lives in one SQLite file at
-`DATABASE_PATH` (default in Docker: `/app/data/chooneh.db`) → mount a persistent disk at `/app/data`.
+`DATABASE_PATH` (default in Docker: `/app/data/tarazoo.db`) → mount a persistent disk at `/app/data`.
 
 > **HTTPS is required** for the camera (X-ray, photo capture, barcode) on phones. Liara's `*.liara.run`
 > domains are HTTPS out of the box.
@@ -17,7 +17,7 @@ Liara's CLI/console changes over time. If a step below differs, follow Liara's d
    npm i -g @liara/cli
    liara login
    ```
-2. Create the app in the Liara console (or `liara app create`): name `chooneh`, platform **Docker**, the smallest plan with ≥ 1 GB RAM.
+2. Create the app in the Liara console (or `liara app create`): name `tarazoo`, platform **Docker**, the smallest plan with ≥ 1 GB RAM.
    If you choose another name, change `"app"` in `liara.json`.
 3. Create a disk named `data` (1 GB is plenty) for the app: Console → app → Disks. It's mounted at `/app/data` (see `liara.json`).
 4. Set environment variables: Console → app → Settings → Environment variables. Minimum for the demo:
@@ -34,9 +34,9 @@ Liara's CLI/console changes over time. If a step below differs, follow Liara's d
    liara deploy
    ```
    The image builds on Liara's builder (`npm ci` + `next build`; takes about 3–5 minutes).
-6. Smoke test on the URL Liara gives you (e.g. `https://chooneh.liara.run`):
+6. Smoke test on the URL Liara gives you (e.g. `https://tarazoo.liara.run`):
    ```bash
-   curl https://chooneh.liara.run/api/health
+   curl https://tarazoo.liara.run/api/health
    ```
    Expected: `{"ok":true,"llm":"mock","priceProvider":"mock",...}`. Then on your phone, **on mobile data**, open
    the URL: home → X-ray → «قفسه‌ی نمونه» → tap a badge → verdict.
@@ -51,8 +51,8 @@ variables **before** `liara deploy`. If the builder doesn't pass them through as
 ## Any Docker host
 
 ```bash
-docker build -t chooneh .
-docker run -d --name chooneh -p 3000:3000 -v chooneh-data:/app/data --env-file .env --restart unless-stopped chooneh
+docker build -t tarazoo .
+docker run -d --name tarazoo -p 3000:3000 -v tarazoo-data:/app/data --env-file .env --restart unless-stopped tarazoo
 curl http://localhost:3000/api/health
 ```
 
@@ -63,7 +63,7 @@ Put it behind an HTTPS reverse proxy (Caddy, nginx + certbot) for camera access 
 ```bash
 npm ci && npm run build
 cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/
-PORT=3000 DATABASE_PATH=./data/chooneh.db node .next/standalone/server.js
+PORT=3000 DATABASE_PATH=./data/tarazoo.db node .next/standalone/server.js
 ```
 
 For a phone demo from a laptop on the same Wi-Fi you still need HTTPS for the camera. Use a tunnel

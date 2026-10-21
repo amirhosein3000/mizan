@@ -1,6 +1,6 @@
 /**
  * Generates the PWA icons from an original SVG (no fonts, pure shapes):
- * a white price tag with green/yellow/red verdict dots on a violet gradient.
+ * a white balance scale (ترازو) with a green and a red pan and a yellow pivot, on a violet gradient.
  *
  *   npm run icons
  */
@@ -22,19 +22,20 @@ function svg(size: number, { maskable = false } = {}): string {
     </linearGradient>
   </defs>
   <rect width="${size}" height="${size}" rx="${r}" fill="url(#g)"/>
-  <g transform="translate(${pad} ${pad}) rotate(-12 ${s / 2} ${s / 2})">
-    <path d="M ${s * 0.3} ${s * 0.16}
-             L ${s * 0.86} ${s * 0.16}
-             Q ${s * 0.92} ${s * 0.16} ${s * 0.92} ${s * 0.22}
-             L ${s * 0.92} ${s * 0.78}
-             Q ${s * 0.92} ${s * 0.84} ${s * 0.86} ${s * 0.84}
-             L ${s * 0.3} ${s * 0.84}
-             L ${s * 0.08} ${s * 0.5} Z"
-          fill="#ffffff"/>
-    <circle cx="${s * 0.27}" cy="${s * 0.5}" r="${s * 0.055}" fill="#5b47e0"/>
-    <circle cx="${s * 0.47}" cy="${s * 0.5}" r="${s * 0.075}" fill="#11994a"/>
-    <circle cx="${s * 0.64}" cy="${s * 0.5}" r="${s * 0.075}" fill="#f2b400"/>
-    <circle cx="${s * 0.81}" cy="${s * 0.5}" r="${s * 0.075}" fill="#e0393e"/>
+  <g transform="translate(${pad} ${pad})" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="${s * 0.045}">
+    <!-- post, base and beam -->
+    <path d="M ${s * 0.5} ${s * 0.2} L ${s * 0.5} ${s * 0.82}"/>
+    <path d="M ${s * 0.32} ${s * 0.84} L ${s * 0.68} ${s * 0.84}"/>
+    <path d="M ${s * 0.14} ${s * 0.3} L ${s * 0.86} ${s * 0.26}"/>
+    <!-- pan strings -->
+    <path d="M ${s * 0.14} ${s * 0.3} L ${s * 0.05} ${s * 0.56} M ${s * 0.14} ${s * 0.3} L ${s * 0.23} ${s * 0.56}" stroke-width="${s * 0.025}"/>
+    <path d="M ${s * 0.86} ${s * 0.26} L ${s * 0.77} ${s * 0.52} M ${s * 0.86} ${s * 0.26} L ${s * 0.95} ${s * 0.52}" stroke-width="${s * 0.025}"/>
+  </g>
+  <g transform="translate(${pad} ${pad})">
+    <!-- pans: green (good deal) and red (overpriced), yellow pivot -->
+    <path d="M ${s * 0.02} ${s * 0.56} L ${s * 0.26} ${s * 0.56} A ${s * 0.12} ${s * 0.1} 0 0 1 ${s * 0.02} ${s * 0.56} Z" fill="#11994a"/>
+    <path d="M ${s * 0.74} ${s * 0.52} L ${s * 0.98} ${s * 0.52} A ${s * 0.12} ${s * 0.1} 0 0 1 ${s * 0.74} ${s * 0.52} Z" fill="#e0393e"/>
+    <circle cx="${s * 0.5}" cy="${s * 0.2}" r="${s * 0.065}" fill="#f2b400"/>
   </g>
 </svg>`;
 }

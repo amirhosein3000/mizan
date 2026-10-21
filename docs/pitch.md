@@ -9,7 +9,7 @@ whether the price in front of them is fair, whether the item is genuine/register
 - Primary: a shopper standing in a mobile shop, appliance store, supermarket or bazaar, phone in hand, 30 seconds of attention.
 - Secondary: the store owner who wants to know how their prices compare to the online market.
 
-## 3. Product — Chooneh (چونه)
+## 3. Product — Tarazoo (ترازو)
 A friendly Persian shopping buddy in your pocket (installable PWA):
 1. **Identify** the product: photo, barcode or name.
 2. **See the online price picture**: cheapest / typical / most expensive across sellers.
