@@ -98,7 +98,7 @@ export function HistoryScreen() {
                 href={`/p/${encodeURIComponent(h.productId)}${h.storePrice ? `?price=${h.storePrice}` : ""}`}
                 className="min-w-0 flex-1"
               >
-                <div className="truncate text-[14px] font-semibold">{h.productName}</div>
+                <div className="line-clamp-2 text-[14px] font-semibold leading-6">{h.productName}</div>
                 <div className="tabular mt-0.5 text-[12px] text-muted">
                   {h.paidPrice
                     ? `خریدی ${formatToman(h.paidPrice)}`

@@ -50,7 +50,6 @@ body {
 body {
   font-family: var(--font-vazirmatn), Tahoma, sans-serif;
   -webkit-tap-highlight-color: transparent;
-  font-feature-settings: "ss01";
 }
 
 /* Numbers in prices: tabular so they don't jump while typing. */

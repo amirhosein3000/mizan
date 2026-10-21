@@ -68,9 +68,14 @@ export function drawDemoShelf(items: ShelfItem[]): { dataUrl: string; hints: str
     ctx.direction = "ltr";
     ctx.font = `800 40px ${font}`;
     ctx.fillText(item.product.brand.toUpperCase(), x + w / 2, y + 62);
-    ctx.font = `700 30px ${font}`;
-    const model = item.product.model.length > 30 ? item.product.model.slice(0, 29) + "…" : item.product.model;
-    ctx.fillText(model, x + w / 2, y + 108);
+    // Shrink the model line until it fits the box.
+    const model = item.product.model.replace(/ RAM \d+GB$/, "");
+    let size = 34;
+    do {
+      ctx.font = `700 ${size}px ${font}`;
+      size -= 2;
+    } while (ctx.measureText(model).width > w - 36 && size > 16);
+    ctx.fillText(model, x + w / 2, y + 110);
     ctx.direction = "rtl";
     ctx.font = `500 24px ${font}`;
     ctx.fillText(item.product.subcategory, x + w / 2, y + h - 30);

@@ -82,7 +82,7 @@ export function HomeScreen() {
             </span>
           </div>
           {/* Decorative badges */}
-          <div className="absolute -left-2 top-5 flex flex-col items-end gap-2" aria-hidden>
+          <div className="absolute left-3 top-6 flex flex-col items-start gap-2" aria-hidden>
             {(["good", "high", "fair"] as const).map((l, i) => (
               <span
                 key={l}
@@ -162,7 +162,7 @@ export function HomeScreen() {
                 className="flex items-center gap-3 rounded-2xl bg-surface px-4 py-3 active:bg-surface-2"
               >
                 <span className={`size-2.5 shrink-0 rounded-full ${h.verdict ? LEVEL_STYLE[h.verdict].bg : "bg-line"}`} />
-                <span className="min-w-0 flex-1 truncate text-[14px] font-semibold">{h.productName}</span>
+                <span className="line-clamp-1 min-w-0 flex-1 text-[14px] font-semibold">{h.productName}</span>
                 <span className="shrink-0 text-[11px] text-muted">{timeAgo(h.updatedAt)}</span>
               </Link>
             ))}

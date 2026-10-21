@@ -69,14 +69,21 @@ export class MockPriceProvider implements PriceProvider {
         rank: Math.abs(x.summary!.median / base.median - 0.88) + (family(x.o) === fam ? 0.5 : 0),
       }))
       .sort((a, b) => a.rank - b.rank)
+      // One variant per model family, so the list shows genuinely different options.
+      .filter((x, i, list) => list.findIndex((y) => family(y.o) === family(x.o)) === i)
       .slice(0, opts.limit ?? 4)
       .map((x) => ({ product: strip(x.o), summary: x.summary }));
   }
 
   async listFeatured(limit = 12): Promise<Product[]> {
-    return all
-      .filter((p) => p.popular)
-      .slice(0, limit)
-      .map(strip);
+    // Round-robin across categories so any prefix of the list is a good mix.
+    const popular = all.filter((p) => p.popular);
+    const byCat = new Map<string, SeedProduct[]>();
+    for (const p of popular) byCat.set(p.category, [...(byCat.get(p.category) ?? []), p]);
+    const mixed: SeedProduct[] = [];
+    for (let i = 0; mixed.length < popular.length; i++) {
+      for (const list of byCat.values()) if (list[i]) mixed.push(list[i]);
+    }
+    return mixed.slice(0, limit).map(strip);
   }
 }

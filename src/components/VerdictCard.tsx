@@ -5,6 +5,7 @@ import { formatToman } from "@/lib/format";
 import type { CategoryId, PriceSummary } from "@/lib/price/types";
 import { CHECKLISTS, negotiationLine, type Verdict, type VerdictLevel } from "@/lib/verdict";
 import { NegotiationSheet } from "./NegotiationSheet";
+import { Portal } from "./Portal";
 import { Button } from "./ui";
 
 export const LEVEL_STYLE: Record<VerdictLevel, { bg: string; fg: string; soft: string; label: string }> = {
@@ -104,7 +105,11 @@ export function VerdictCard({
           </Button>
         )}
       </div>
-      {sheet && <NegotiationSheet line={line} target={verdict.targetPrice} onClose={() => setSheet(false)} />}
+      {sheet && (
+        <Portal>
+          <NegotiationSheet line={line} target={verdict.targetPrice} onClose={() => setSheet(false)} />
+        </Portal>
+      )}
     </section>
   );
 }

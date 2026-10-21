@@ -83,10 +83,11 @@ export function XrayScreen() {
     setError(null);
     setLive(false);
     try {
-      const { results } = await api<{ results: { product: Product; summary: PriceSummary | null }[] }>("/api/products/featured");
+      const { results } = await api<{ results: { product: Product; summary: PriceSummary | null }[] }>("/api/products/featured?limit=40");
       const cat = DEMO_SETS[demoIdx % DEMO_SETS.length];
       setDemoIdx((i) => i + 1);
       const shelf = results.filter((r): r is ShelfItem => r.product.category === cat && !!r.summary).slice(0, 4);
+      if (shelf.length === 0) throw new Error("empty demo shelf");
       const { dataUrl, hints } = drawDemoShelf(shelf);
       setAspect(1200 / 900);
       setFrame(dataUrl);
@@ -274,7 +275,7 @@ function Badge({ item, index, onTap }: { item: XrayItem; index: number; onTap: (
   return (
     <button
       onClick={onTap}
-      className="pop-in absolute z-10 -translate-x-1/2"
+      className="pop-in absolute z-10 -translate-x-1/2 -translate-y-1/2"
       style={{ left: `${(x + w / 2) * 100}%`, top: `${y * 100}%`, animationDelay: `${index * 90}ms` }}
     >
       <span

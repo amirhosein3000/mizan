@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { Share2, X } from "lucide-react";
 import { formatNumber, formatToman, parsePrice, toFaDigits } from "@/lib/format";
 import { APP_NAME } from "@/lib/persona";
+import { Portal } from "./Portal";
 import { Button } from "./ui";
 
 export interface SavingsInput {
@@ -112,6 +113,7 @@ export function SavingsSheet({
   }
 
   return (
+    <Portal>
     <div className="fixed inset-0 z-50 flex items-end bg-black/40" onClick={onClose}>
       <div
         className="rise mx-auto w-full max-w-[480px] rounded-t-3xl bg-surface p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]"
@@ -173,5 +175,6 @@ export function SavingsSheet({
         )}
       </div>
     </div>
+    </Portal>
   );
 }
