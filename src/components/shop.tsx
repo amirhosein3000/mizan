@@ -116,8 +116,8 @@ export function TravelLine({ x }: { x: Pick<RankedShop, "distanceM" | "travel"> 
 const REASON_TONE: Record<Reason["tone"], Tone> = { good: "good", info: "muted", warn: "fair" };
 
 export function Reasons({ reasons, max = 4 }: { reasons: Reason[]; max?: number }) {
-  // Opening status is shown separately; skip it here.
-  const list = reasons.filter((r) => !/^باز|^بسته|ساعت کاری/.test(r.text)).slice(0, max);
+  // Opening status, confirmed stock and price age have their own lines on the card; skip them here.
+  const list = reasons.filter((r) => !/^باز|^بسته|ساعت کاری|^موجودی|^قیمت .*(به‌روز|ثبت) شده/.test(r.text)).slice(0, max);
   if (!list.length) return null;
   return (
     <div className="flex flex-wrap gap-1">

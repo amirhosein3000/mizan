@@ -2,6 +2,30 @@
 
 Update this file at the end of every session/milestone: what's done, what's next, open issues.
 
+## UX pass — 2026-10-22 (whole demo path reviewed at 390px with headless Chrome)
+
+Fixed / improved:
+- Home "popular" ranked by DISTINCT shops (one shop listed a sofa 105 times), everyday categories first.
+- Search opened from a link (`?q=` without `said`) now runs the request parser, so budget/installment apply.
+- Product cards lead with «از X» = cheapest shop matching the shopper's conditions (listed outliers below the
+  trimmed minimum ignored), Tehran range underneath; products no shop can sell sink to the bottom, dimmed.
+- Context bar: budget + active conditions first (what the agent set is visible without scrolling).
+- Location sheet: landmarks first as chips (ونک، تجریش…), shop-dense areas below.
+- Product: floating call CTA no longer collides with the centre «بپرس» button; header shows the category;
+  duplicate chips (confirmed stock, price age) removed from shop cards; 404 = empty state with a way forward.
+- Shop page: **plan B** — opened for a product while closed (now or at the visit time) → the nearest open shops
+  that list it, with price (`openInstead` in `/api/shops/[id]?p=`).
+- Mission: narration and hint follow the status (visiting / bought); no-best → «گزینه‌های تأییدشده»;
+  address shown once, Persian digits; warranty text in Persian digits; not-found mission explains devices.
+- Compare: «ارزون‌ترین با شرایط تو» row, «فعلاً بسته» instead of ۰, distance row hidden without a location.
+- X-ray: badges centred on each product and clamped inside the photo; readable scanning label; demo-shelf hints
+  matched by text (the model may reorder items or misread a tag) — verdicts now stable.
+- Voice: browser speech recognition (fa-IR) first; server STT fallback; graceful 503 when the provider has no STT
+  (BoxAPI). Mock phrases updated to Tehran shopping requests.
+
+Review tooling (not committed): puppeteer-core in the session scratchpad, iPhone-size emulation, full-page shots.
+The in-app browser pane crops when hidden, so use headless shots for visual review.
+
 ## Status — 2026-10-21 (challenge published, app rebuilt on the Torob dataset)
 
 The challenge turned out to be «دستیار هوشمند خرید حضوری از فروشگاه‌های تهران» with a dataset of shops, products
@@ -22,7 +46,7 @@ the brief. X-ray, verdict, scan, list and voice stay as the «تو مغازه» 
   confirmations shared across shoppers for 3 days.
 - **Step 4**: recommendation card (confirmed price, hold, leave-by, traffic-zone tip, Neshan/Balad/Google, checklist),
   «دارم میرم» / «دوباره بپرس» / «خریدم» + price report; tracking page.
-- Gates: `npm run check` green (48 tests). Standalone production server smoke-tested (health, search, product, missions).
+- Gates: `npm run check` green (54 tests as of the UX pass). Standalone production server smoke-tested (health, search, product, missions).
 - Docs: README, CLAUDE.md, docs/deploy.md (Liara), docs/demo-video.md (5-min script).
 
 ### Verified by hand (in-app browser, 375px)

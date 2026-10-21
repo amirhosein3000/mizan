@@ -13,7 +13,7 @@ import { ProductImage } from "@/components/ProductImage";
 import { AddressLine, MapButtons, OpenPill, PaymentBadges, PriceTruth, StockLine, TrafficHint } from "@/components/shop";
 import { Card, ErrorNote, Pill, SectionTitle, Skeleton } from "@/components/ui";
 import type { Offer, Product, Shop } from "@/lib/catalog/types";
-import { formatNumber, toFaDigits } from "@/lib/format";
+import { formatNumber, formatTomanShort, toFaDigits } from "@/lib/format";
 import { priceFreshness } from "@/lib/shop/freshness";
 import { formatDistance, travelEstimate } from "@/lib/shop/geo";
 import { DAY_NAMES, dayLabel, tehranClock, type OpenStatus } from "@/lib/shop/hours";
@@ -27,6 +27,7 @@ interface ShopResponse {
   distanceM: number | null;
   offers: { offer: Offer; product: Product; confirmation: Confirmation | null }[];
   neighbours: { shop: Shop; distanceM: number; status: OpenStatus }[];
+  openInstead: { shop: Shop; price: number | null; priceSource: "confirmed" | "listed" | "none"; status: OpenStatus; distanceM: number }[];
 }
 
 export function ShopScreen({ params }: { params: Promise<{ id: string }> }) {
@@ -37,7 +38,7 @@ export function ShopScreen({ params }: { params: Promise<{ id: string }> }) {
   const [q, setQ] = useState("");
   const [term, setTerm] = useState("");
   const { data, previous, error, notFound, reload } = useApi<ShopResponse>(
-    withCtx(`/api/shops/${encodeURIComponent(id)}${term ? `?q=${encodeURIComponent(term)}` : ""}`, query),
+    withCtx(`/api/shops/${encodeURIComponent(id)}?${new URLSearchParams({ ...(term ? { q: term } : {}), ...(focus ? { p: focus } : {}) })}`, query),
   );
   const d = data ?? previous;
   const today = tehranClock().day;
@@ -104,6 +105,35 @@ export function ShopScreen({ params }: { params: Promise<{ id: string }> }) {
           <MapButtons shop={shop} />
           <TrafficHint shop={shop} />
         </Card>
+
+        {d.openInstead.length > 0 && (
+          <Card className="space-y-2 ring-2 ring-fair/40">
+            <h3 className="flex items-center gap-1.5 text-[14px] font-extrabold">
+              <Store className="size-4.5 text-fair" /> {ctx.visitAt ? "وقتی می‌رسی بسته‌ست" : "الان بسته‌ست"}؛ این‌ها بازن و همین کالا رو دارن
+            </h3>
+            {d.openInstead.map((n) => (
+              <Link
+                key={n.shop.id}
+                href={`/s/${encodeURIComponent(n.shop.id)}?p=${encodeURIComponent(focus ?? "")}`}
+                className="flex items-center gap-3 rounded-2xl bg-surface-2 p-3 active:bg-brand-soft"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[14px] font-bold">{n.shop.name}</div>
+                  <div className="truncate text-[12px] text-muted">
+                    {[`${formatDistance(n.distanceM)} از اینجا`, n.shop.floor ? `طبقه ${toFaDigits(n.shop.floor)}` : null, n.shop.mall].filter(Boolean).join("، ")}
+                  </div>
+                </div>
+                <div className="shrink-0 text-end">
+                  {n.price ? <div className="tabular text-[13.5px] font-extrabold">{formatTomanShort(n.price)}</div> : null}
+                  <div className={`text-[11px] font-bold ${n.priceSource === "confirmed" ? "text-good" : "text-muted"}`}>
+                    {n.priceSource === "confirmed" ? "تأییدشده" : n.price ? "ثبت‌شده" : ""}
+                  </div>
+                </div>
+                <OpenPill status={n.status} />
+              </Link>
+            ))}
+          </Card>
+        )}
 
         <Card className="space-y-2">
           <h3 className="flex items-center gap-1.5 text-[14px] font-extrabold">

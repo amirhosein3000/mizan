@@ -150,7 +150,27 @@ export function LocationSheet({ onClose }: { onClose: () => void }) {
         />
       </label>
 
-      <div className="mt-4 text-[12px] font-bold text-muted">محله‌های پرفروشگاه (از داده‌ی ترب)</div>
+      {landmarks.length > 0 && (
+        <>
+          <div className="mt-4 text-[12px] font-bold text-muted">میدان‌ها و جاهای شناخته‌شده</div>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {landmarks.map((a) => {
+              const on = ctx.origin?.label === a.name;
+              return (
+                <button
+                  key={a.name}
+                  onClick={() => set({ lat: a.lat, lon: a.lon, label: a.name, source: "landmark" })}
+                  className={`inline-flex items-center gap-1 rounded-full px-3 py-2 text-[13px] font-bold ${on ? "bg-brand text-white" : "bg-surface ring-1 ring-line active:bg-surface-2"}`}
+                >
+                  {on && <Check className="size-3.5" />}
+                  {a.name}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
+      <div className="mt-5 text-[12px] font-bold text-muted">یا محله‌های پرفروشگاه (از داده‌ی ترب)</div>
       <div className="mt-2 flex flex-col gap-1.5">
         {areas.slice(0, 14).map((a) => (
           <OptionRow
@@ -159,14 +179,6 @@ export function LocationSheet({ onClose }: { onClose: () => void }) {
             onClick={() => set({ lat: a.lat, lon: a.lon, label: a.name, source: "area" })}
             sub={`${formatNumber(a.shops)} فروشگاه`}
           >
-            {a.name}
-          </OptionRow>
-        ))}
-      </div>
-      <div className="mt-4 text-[12px] font-bold text-muted">جاهای شناخته‌شده (تقریبی)</div>
-      <div className="mt-2 flex flex-col gap-1.5">
-        {landmarks.map((a) => (
-          <OptionRow key={a.name} active={ctx.origin?.label === a.name} onClick={() => set({ lat: a.lat, lon: a.lon, label: a.name, source: "landmark" })}>
             {a.name}
           </OptionRow>
         ))}
