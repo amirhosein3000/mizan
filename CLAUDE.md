@@ -43,6 +43,7 @@ npm run check        # lint + typecheck + tests + build — run before claiming 
 npm run lint | typecheck | test | build
 npm run seed         # regenerate src/data/mock/products.json (deterministic)
 npm run icons        # regenerate public/icons/* from the SVG in scripts/generate-icons.ts
+npm run smoke:llm    # build + exercise the LIVE LLM path and failure modes against scripts/fake-llm.mjs (no key needed)
 docker build -t chooneh . && docker run -p 3000:3000 -v chooneh-data:/app/data chooneh
 ```
 
@@ -71,9 +72,10 @@ src/
     persona.ts              assistant name, greetings, system prompt
     http.ts                 handle() wrapper, fail(), device-id cookie, image validation
   data/mock/products.json   GENERATED mock catalog (292 products) — do not hand-edit, run `npm run seed`
-scripts/                    generate-seed.ts, generate-icons.ts
+scripts/                    generate-seed.ts, generate-icons.ts, fake-llm.mjs (fake OpenAI-compatible server), llm-smoke.mjs
 tests/                      vitest unit tests
-docs/                       progress.md, spec-day.md, pitch.md, deploy.md
+docs/                       progress.md, spec-day.md, pitch.md, deploy.md (Liara + Docker)
+liara.json, Dockerfile      deployment (standalone Next server, SQLite on a disk at /app/data)
 ```
 
 ## Conventions
@@ -144,6 +146,14 @@ Flags: edit `enabled` in code, or at build time `NEXT_PUBLIC_FEATURES_OFF=chat,s
 - `RouteContext<…>` global type only exists after typegen; route files type `ctx` explicitly.
 - `next lint` is gone — `npm run lint` runs `eslint` directly. The React Compiler lint rules forbid synchronous `setState` in effects and creating components during render.
 - `AGENTS.md` is rewritten by `next dev`; commit it as-is.
+- `devIndicators: false` in next.config — the dev badge covers the bottom nav at phone width.
+- Overlays inside an element with a CSS animation/transform get clipped: always use `<Portal>`.
+
+## Testing without hardware or keys
+
+- No camera (desktop, in-app browser): X-ray → «قفسه‌ی نمونه»; scan → gallery upload; barcode → manual number entry; `/demo` prints barcodes.
+- No LLM key: MOCK mode is automatic. To test the live path: `npm run smoke:llm`, or run `node scripts/fake-llm.mjs 4011 ok`
+  and start the app with `MOCK_LLM=false LLM_BASE_URL=http://127.0.0.1:4011/v1 LLM_API_KEY=x LLM_MODEL=fake`.
 
 ## Verdict thresholds (`lib/verdict.ts`)
 

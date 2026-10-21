@@ -3,7 +3,7 @@
 import "server-only";
 import { getLLM, parseJsonReply } from "@/lib/llm";
 import { getPriceProvider, summarizeOffers, type Product } from "@/lib/price";
-import { roundNice } from "@/lib/format";
+import { parsePrice, roundNice } from "@/lib/format";
 
 export interface VisionItem {
   brand: string;
@@ -37,7 +37,8 @@ function sanitize(raw: unknown): VisionItem | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
   const bbox = Array.isArray(r.bbox) && r.bbox.length === 4 ? (r.bbox.map(clamp01) as VisionItem["bbox"]) : null;
-  const price = r.price == null ? null : Number(String(r.price).replace(/[^\d.]/g, ""));
+  // Models sometimes return "۴۷۰٬۰۰۰" or "470,000 تومان" instead of a number.
+  const price = r.price == null ? null : typeof r.price === "number" ? r.price : parsePrice(String(r.price));
   const item: VisionItem = {
     brand: String(r.brand ?? "").trim(),
     model: String(r.model ?? "").trim(),

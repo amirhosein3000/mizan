@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Keyboard } from "lucide-react";
 import { toEnDigits } from "@/lib/format";
-import { CAMERA_MESSAGES, useCamera } from "@/lib/use-camera";
+import { useCamera } from "@/lib/use-camera";
 import { Button } from "./ui";
 
 type Detector = { detect: (src: CanvasImageSource) => Promise<{ rawValue: string }[]> };
@@ -78,7 +78,11 @@ export function BarcodeScanner({ onDetected }: { onDetected: (code: string) => v
           </div>
         )}
         {status === "starting" && <p className="absolute inset-x-0 bottom-3 text-center text-sm text-white/80">در حال روشن کردن دوربین…</p>}
-        {failed && <p className="absolute inset-0 grid place-items-center p-6 text-center text-sm leading-7 text-white">{CAMERA_MESSAGES[status]}</p>}
+        {failed && (
+          <p className="absolute inset-0 grid place-items-center p-6 text-center text-sm leading-7 text-white">
+            {status === "denied" ? "اجازه‌ی دوربین داده نشده." : "دوربین در دسترس نیست."} عدد زیر بارکد رو پایین تایپ کن.
+          </p>
+        )}
       </div>
       <p className="text-center text-[13px] text-muted">بارکد رو داخل کادر بگیر؛ خودکار خونده میشه.</p>
 

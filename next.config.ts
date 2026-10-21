@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
   output: "standalone",
   // Native module: keep it out of the bundle, load it from node_modules at runtime.
   serverExternalPackages: ["better-sqlite3"],
+  // The dev badge covers the bottom nav on a phone-sized viewport.
+  devIndicators: false,
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {

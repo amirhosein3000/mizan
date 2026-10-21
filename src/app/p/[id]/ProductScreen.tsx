@@ -61,6 +61,10 @@ export function ProductScreen({ params }: { params: Promise<{ id: string }> }) {
       ? computeVerdict(storePrice, summary, { printedPrice: product?.printedPrice })
       : null;
 
+  useEffect(() => {
+    if (product) document.title = `${product.nameFa} · چونه`;
+  }, [product]);
+
   // Record the look (and the verdict once there is one) in history.
   useEffect(() => {
     if (!product) return;

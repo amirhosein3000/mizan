@@ -84,6 +84,11 @@ function PhotoTab({ onTypeInstead }: { onTypeInstead: () => void }) {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<IdentifyResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const resultRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (result) resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [result]);
 
   async function onFile(file: File) {
     setError(null);
@@ -150,10 +155,17 @@ function PhotoTab({ onTypeInstead }: { onTypeInstead: () => void }) {
       {input(cameraRef, true)}
       {input(galleryRef, false)}
 
-      {error && <ErrorNote message={error} />}
+      {error && (
+        <>
+          <ErrorNote message={error} />
+          <Button variant="ghost" onClick={onTypeInstead}>
+            اسمش رو تایپ می‌کنم
+          </Button>
+        </>
+      )}
 
       {result && (
-        <div className="rise flex flex-col gap-3">
+        <div ref={resultRef} className="rise flex scroll-mt-16 flex-col gap-3">
           {result.candidates.length > 0 ? (
             <>
               <div>

@@ -28,8 +28,13 @@ checked through the API (high-confidence and picker paths).
 - Real LLM / vision provider (no key yet).
 - Docker image build: Docker isn't installed on this machine. The standalone server was smoke-tested directly with Node.
 
+### Prompt 1 (verify & harden) — DONE
+- Gates green; demo path walked at 380px in the in-app browser (incl. photo identify via injected file: auto-jump and picker paths, barcode with Persian digits, suspicious-cheap and above-printed-price verdicts, tools, demo kit, 404).
+- Live LLM path tested end to end against a fake OpenAI-compatible server (`npm run smoke:llm`): ok, backup-provider fallback, junk JSON, 401, 500, timeout, unreachable → all 200 or friendly Persian 503, never a crash.
+- Fixed: shelf prices returned with Persian digits were dropped; overlays clipped by animated parents (Portal); dev badge covering the nav; empty grocery demo shelf; duplicate alternatives; camera-denied copy on the barcode tab; suspicious-cheap verdict now amber; picker scrolls into view.
+- docs/deploy.md (Liara + Docker + no-Docker fallback), liara.json.
+
 ## Next
-- Prompt 1: strict review and hardening, docs/deploy.md (Liara), LLM failure behaviour.
 - Prompt 2: extra modules behind flags.
 - Prompt 3: spec-day dry run.
 

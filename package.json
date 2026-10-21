@@ -11,7 +11,8 @@
     "test": "vitest run",
     "check": "npm run lint && npm run typecheck && npm run test && npm run build",
     "seed": "tsx scripts/generate-seed.ts",
-    "icons": "tsx scripts/generate-icons.ts"
+    "icons": "tsx scripts/generate-icons.ts",
+    "smoke:llm": "next build && node scripts/llm-smoke.mjs"
   },
   "dependencies": {
     "@zxing/browser": "^0.2.1",

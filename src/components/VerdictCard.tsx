@@ -36,7 +36,8 @@ export function VerdictCard({
 }) {
   const [checkOpen, setCheckOpen] = useState(verdict.suspiciouslyCheap);
   const [sheet, setSheet] = useState(false);
-  const s = LEVEL_STYLE[verdict.level];
+  // A suspiciously cheap price is a caution, not a celebration: show it in amber.
+  const s = LEVEL_STYLE[verdict.suspiciouslyCheap ? "fair" : verdict.level];
   const line = negotiationLine(verdict, summary);
   const diff = verdict.diffFromMedian;
 
