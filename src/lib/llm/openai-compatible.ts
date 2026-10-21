@@ -39,15 +39,22 @@ export class OpenAICompatibleClient implements LLMClient {
       model: opts.vision ? this.cfg.visionModel : this.cfg.model,
       messages,
       temperature: opts.temperature ?? 0.4,
-      max_tokens: opts.maxTokens ?? 800,
+      // Newer OpenAI-family models (and gateways in front of them) reject `max_tokens`.
+      max_completion_tokens: opts.maxTokens ?? 800,
     };
     if (opts.json && this.cfg.jsonMode) body.response_format = { type: "json_object" };
 
     try {
       let res = await this.post(body);
-      // Some providers reject response_format — retry once without it.
-      if (res.status === 400 && body.response_format) {
-        delete body.response_format;
+      // Some models/providers reject an optional parameter — drop it and retry (at most once per parameter).
+      for (let i = 0; i < 3 && res.status === 400; i++) {
+        const detail = await res.clone().text();
+        const bad = (["response_format", "temperature"] as const).find((k) => k in body && detail.includes(k));
+        if (bad) delete body[bad];
+        else if (detail.includes("max_completion_tokens") && "max_completion_tokens" in body) {
+          body.max_tokens = body.max_completion_tokens;
+          delete body.max_completion_tokens;
+        } else break;
         res = await this.post(body);
       }
       const text = await res.text();

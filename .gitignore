@@ -51,3 +51,5 @@ next-env.d.ts
 /catalog/*.db-*
 /catalog/*.tmp
 /catalog/*.xz
+# local secrets
+/Api token*.txt

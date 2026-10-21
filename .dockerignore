@@ -13,3 +13,6 @@ coverage
 .claude
 npm-debug.log*
 # The packed catalog (catalog/catalog.db.xz) IS needed by the build.
+# local secrets (never upload)
+Api token*.txt
+*token*.txt

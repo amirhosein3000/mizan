@@ -15,3 +15,6 @@ catalog/*.tmp
 coverage
 tsconfig.tsbuildinfo
 npm-debug.log*
+# local secrets (never upload)
+Api token*.txt
+*token*.txt

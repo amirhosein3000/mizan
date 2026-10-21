@@ -35,6 +35,12 @@ answering a live inquiry → shopper sees confirmed price + hold + leave-by. Map
 - Product photos and map tiles from inside Iran (Torob's image CDN is blocked from this dev machine; fallbacks work).
 - Real LLM (no key yet); GPS on a real phone.
 
+### LLM integration (BoxAPI) — DONE 2026-10-21
+- `.env.local` (gitignored) points at https://ai.boxapi.ir/ai/v1, model `gpt-5.4-mini` (text + vision). Verified live: /api/chat, /api/identify, /api/xray (reads brand/model/price from a photo, matches, verdict).
+- Client fix: GPT-5-family models reject `max_tokens` and non-default `temperature` -> now sends `max_completion_tokens` and retries without any parameter the provider rejects.
+- BoxAPI has no /audio/transcriptions, so voice input won't work live. `gpt-6-*` models only accept default temperature (handled by retry) and are slower.
+- On this machine a local proxy (127.0.0.1:10808) breaks curl to boxapi; Node fetch is fine.
+
 ## Next
 - Deploy to Liara (docs/deploy.md): user logs in, then `liara deploy`.
 - Record the demo video (docs/demo-video.md), ideally during shop hours.
