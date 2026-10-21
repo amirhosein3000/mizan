@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { computeVerdict, negotiationLine } from "@/lib/verdict";
-import type { PriceSummary } from "@/lib/price/types";
+import type { PriceSummary } from "@/lib/catalog/types";
 
-const summary: PriceSummary = { min: 30_000_000, median: 34_000_000, max: 40_000_000, mean: 34_500_000, count: 8 };
+const summary: PriceSummary = { min: 30_000_000, median: 34_000_000, max: 40_000_000, count: 8 };
 
 describe("computeVerdict", () => {
   it("calls a price at or below the median a good deal", () => {
@@ -30,14 +30,14 @@ describe("computeVerdict", () => {
     expect(v.title).toBe("گرونه!");
   });
 
-  it("flags prices far below every online offer as suspicious", () => {
+  it("flags prices far below every listed price as suspicious", () => {
     const v = computeVerdict(22_000_000, summary);
     expect(v.level).toBe("good");
     expect(v.suspiciouslyCheap).toBe(true);
   });
 
   it("flags grocery prices above the printed consumer price", () => {
-    const grocery: PriceSummary = { min: 420_000, median: 440_000, max: 465_000, mean: 441_000, count: 6 };
+    const grocery: PriceSummary = { min: 420_000, median: 440_000, max: 465_000, count: 6 };
     const v = computeVerdict(470_000, grocery, { printedPrice: 465_000 });
     expect(v.abovePrintedPrice).toBe(true);
     expect(v.level).toBe("high");

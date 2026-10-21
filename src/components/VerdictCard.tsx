@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { BadgeCheck, ChevronDown, Megaphone, ThumbsUp, TriangleAlert } from "lucide-react";
 import { formatToman } from "@/lib/format";
-import type { CategoryId, PriceSummary } from "@/lib/price/types";
+import type { PriceSummary, ProductKind } from "@/lib/catalog/types";
 import { CHECKLISTS, negotiationLine, type Verdict, type VerdictLevel } from "@/lib/verdict";
 import { NegotiationSheet } from "./NegotiationSheet";
 import { Portal } from "./Portal";
@@ -30,7 +30,7 @@ export function VerdictCard({
 }: {
   verdict: Verdict;
   summary: PriceSummary;
-  category: CategoryId;
+  category: ProductKind;
   onBought?: () => void;
   showNegotiation?: boolean;
 }) {

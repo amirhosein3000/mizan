@@ -1,5 +1,7 @@
 import {
   AirVent,
+  ClipboardList,
+  PhoneCall,
   Barcode,
   Camera,
   ChartLine,
@@ -50,6 +52,8 @@ export const FEATURE_ICONS: Record<string, LucideIcon> = {
   map: MapPin,
   mic: Mic,
   store: Store,
+  phone: PhoneCall,
+  track: ClipboardList,
 };
 
 export const SUBCATEGORY_ICONS: Record<string, LucideIcon> = {

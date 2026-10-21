@@ -26,6 +26,53 @@ const BOOTSTRAP_SQL = [
     updated_at INTEGER NOT NULL
   )`,
   `CREATE UNIQUE INDEX IF NOT EXISTS history_device_product ON history (device_id, product_id)`,
+  // ---- agent: missions (one shopping goal), calls to shops, confirmed stock/price ----
+  `CREATE TABLE IF NOT EXISTS missions (
+    id TEXT PRIMARY KEY,
+    device_id TEXT NOT NULL,
+    product_id TEXT NOT NULL,
+    product_title TEXT NOT NULL,
+    context TEXT NOT NULL,
+    asks TEXT NOT NULL,
+    question TEXT,
+    reserve TEXT NOT NULL,
+    status TEXT NOT NULL,
+    chosen_shop_id TEXT,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS missions_device ON missions (device_id, updated_at)`,
+  `CREATE TABLE IF NOT EXISTS calls (
+    id TEXT PRIMARY KEY,
+    mission_id TEXT NOT NULL,
+    shop_id TEXT NOT NULL,
+    product_id TEXT NOT NULL,
+    channel TEXT NOT NULL,
+    reason TEXT,
+    replaces TEXT,
+    started_at INTEGER NOT NULL,
+    ends_at INTEGER,
+    script TEXT,
+    result TEXT,
+    recorded INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE INDEX IF NOT EXISTS calls_mission ON calls (mission_id)`,
+  `CREATE INDEX IF NOT EXISTS calls_shop ON calls (shop_id, started_at)`,
+  `CREATE TABLE IF NOT EXISTS confirmations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    shop_id TEXT NOT NULL,
+    product_id TEXT NOT NULL,
+    available INTEGER,
+    price INTEGER,
+    hold_until INTEGER,
+    source TEXT NOT NULL,
+    note TEXT,
+    call_id TEXT,
+    at INTEGER NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS confirmations_product ON confirmations (product_id, at)`,
+  `CREATE INDEX IF NOT EXISTS confirmations_shop ON confirmations (shop_id, at)`,
+  `CREATE TABLE IF NOT EXISTS seller_presence (shop_id TEXT PRIMARY KEY, last_seen INTEGER NOT NULL)`,
 ];
 
 type DB = BetterSQLite3Database<typeof schema>;
@@ -42,6 +89,12 @@ export function getDb(): DB {
   g.__mizanSqlite = sqlite;
   g.__mizanDb = drizzle(sqlite, { schema });
   return g.__mizanDb;
+}
+
+/** Raw better-sqlite3 handle, for JSON-heavy agent tables where SQL is clearer than an ORM. */
+export function getSqlite(): Database.Database {
+  getDb();
+  return g.__mizanSqlite!;
 }
 
 /** Run a module's CREATE ... IF NOT EXISTS statements once per process. */

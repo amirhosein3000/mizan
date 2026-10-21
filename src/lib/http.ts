@@ -3,6 +3,7 @@ import "server-only";
 import { cookies } from "next/headers";
 import { unstable_rethrow } from "next/navigation";
 import { LLMError } from "@/lib/llm";
+import { contextFromParams, type ShopperContext } from "@/lib/shop/context";
 
 export interface ApiErrorBody {
   error: { code: string; message: string };
@@ -54,4 +55,10 @@ export const MAX_IMAGE_CHARS = 6_000_000;
 
 export function isImageDataUrl(s: unknown): s is string {
   return typeof s === "string" && /^data:image\/(png|jpe?g|webp|gif|heic|heif);base64,/.test(s) && s.length < MAX_IMAGE_CHARS;
+}
+
+/** The shopper's context (origin, radius, visit time, purchase conditions) from query params. */
+export function contextFromRequest(req: Request): ShopperContext {
+  const params = new URL(req.url).searchParams;
+  return contextFromParams((k) => params.get(k));
 }

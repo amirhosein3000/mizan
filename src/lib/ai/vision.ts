@@ -2,7 +2,7 @@
 // by the Price X-ray (many products + their shelf prices in one photo).
 import "server-only";
 import { getLLM, parseJsonReply } from "@/lib/llm";
-import { getPriceProvider, summarizeOffers, type Product } from "@/lib/price";
+import { getCatalog, type Product } from "@/lib/catalog";
 import { parsePrice, roundNice } from "@/lib/format";
 
 export interface VisionItem {
@@ -23,7 +23,7 @@ For each product return:
 - "brand": brand in English (e.g. "Samsung", "Golestan"), "" if unknown
 - "model": model name/number exactly as printed in English (e.g. "Galaxy A56 5G 256GB"), "" if unknown
 - "text": other visible text that helps identify it (Persian or English, short)
-- "category": one of "mobile", "laptop", "appliance", "grocery", "other"
+- "category": short product type in Persian (e.g. "گوشی موبایل", "هدفون", "شارژر")
 - "price": the in-store price shown on a tag/label for THAT product, as an integer in Toman. If the tag says ریال (Rial), divide by 10. Persian digits allowed in the image, but return Latin digits. null if no price is visible.
 - "bbox": [x, y, width, height] of the product in the image, each normalized 0..1
 Return ONLY JSON: {"items": [...]}. If nothing is recognizable, return {"items": []}.`;
@@ -91,29 +91,28 @@ function hashString(s: string): number {
   return h >>> 0;
 }
 
-/** Store-price multipliers vs. the online median, so X-ray badges show a mix of colours. */
+/** Store-price multipliers vs. the Tehran median, so X-ray badges show a mix of colours. */
 const MOCK_PRICE_FACTORS = [0.96, 1.07, 1.21, 0.99, 1.14, 1.03];
 
+/** Categories that make a believable shelf when no hints are given. */
+const SHELF_CATEGORIES = ["هدفون، هدست و هندزفری", "شارژر گوشی", "گوشی موبایل", "اسپیکر و سیستم صوتی"];
+
 async function mockRead(image: string, max: number, hints?: string[], withPrices = true): Promise<VisionItem[]> {
-  const provider = getPriceProvider();
+  const catalog = getCatalog();
   const h = hashString(image);
   let products: Product[] = [];
   // Hints are "productId" or "productId@storePrice" (the demo shelf draws those prices).
   const hintPrices = new Map<string, number>();
   if (hints?.length) {
+    const ids = hints.map((x) => x.split("@")[0]);
+    products = catalog.getProducts(ids);
     for (const hint of hints) {
       const [id, price] = hint.split("@");
-      const p = await provider.getProduct(id);
-      if (!p) continue;
-      products.push(p);
-      if (Number(price) > 0) hintPrices.set(p.id, Number(price));
+      if (Number(price) > 0) hintPrices.set(id, Number(price));
     }
   } else {
-    const featured = await provider.listFeatured(40);
-    // Pick a "shelf" of one category so the scene is believable.
-    const cats = ["mobile", "grocery", "appliance", "laptop"] as const;
-    const cat = cats[h % cats.length];
-    const pool = featured.filter((p) => p.category === cat);
+    const cat = SHELF_CATEGORIES[h % SHELF_CATEGORIES.length];
+    const pool = catalog.search(cat, { category: cat }, 12).products.filter((p) => p.price);
     const n = max === 1 ? 1 : Math.min(pool.length, 4);
     for (let i = 0; i < n; i++) products.push(pool[(h + i) % pool.length]);
     products = [...new Map(products.map((p) => [p.id, p])).values()];
@@ -121,28 +120,26 @@ async function mockRead(image: string, max: number, hints?: string[], withPrices
   products = products.slice(0, max);
 
   // Same 2-column grid as the demo shelf drawing (src/lib/demo-shelf.ts).
-  const cols = Math.min(products.length, 2);
+  const cols = Math.max(1, Math.min(products.length, 2));
   const rows = Math.ceil(products.length / cols);
-  const items: VisionItem[] = [];
-  for (let i = 0; i < products.length; i++) {
-    const p = products[i];
-    const summary = summarizeOffers(await provider.getOffers(p.id));
+  const items: VisionItem[] = products.map((p, i) => {
     const factor = MOCK_PRICE_FACTORS[(i + h) % MOCK_PRICE_FACTORS.length];
     const col = i % cols;
     const row = Math.floor(i / cols);
     // When the photo shows one product, sometimes "read" the label only partially
     // so the candidate picker gets exercised.
     const partial = max === 1 && !hints?.length && h % 3 === 0;
-    const price = hintPrices.get(p.id) ?? (summary ? roundNice(summary.median * factor) : null);
-    items.push({
-      brand: p.brand,
-      model: partial ? p.model.split(" ").slice(0, 2).join(" ") : p.model,
-      text: p.subcategory,
+    const words = p.title.split("|")[0].trim().split(/\s+/);
+    const price = hintPrices.get(p.id) ?? (p.price ? roundNice(p.price.median * factor) : null);
+    return {
+      brand: p.brand ?? "",
+      model: partial ? words.slice(0, 3).join(" ") : words.slice(0, 8).join(" "),
+      text: p.category,
       category: p.category,
       price: withPrices ? price : null,
       bbox: [(col + 0.12) / cols, (row + 0.1) / rows, 0.76 / cols, 0.56 / rows],
-    });
-  }
+    };
+  });
   // Simulate model latency a little, so loading states are visible in demos.
   await new Promise((r) => setTimeout(r, 600));
   return items;

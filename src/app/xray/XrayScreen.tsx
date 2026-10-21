@@ -8,7 +8,7 @@ import { api, errorMessage } from "@/lib/client-api";
 import { drawDemoShelf, type ShelfItem } from "@/lib/demo-shelf";
 import { formatNumber, formatToman, formatTomanShort } from "@/lib/format";
 import { fileToDataUrl, videoFrameToDataUrl } from "@/lib/image";
-import type { PriceSummary, Product } from "@/lib/price/types";
+import type { PriceSummary, Product } from "@/lib/catalog/types";
 import { CAMERA_MESSAGES, useCamera } from "@/lib/use-camera";
 import type { Verdict, VerdictLevel } from "@/lib/verdict";
 import { LEVEL_STYLE } from "@/components/VerdictCard";
@@ -24,7 +24,6 @@ interface XrayItem {
 type Phase = "camera" | "scanning" | "result";
 
 const LIVE_INTERVAL_MS = 3500;
-const DEMO_SETS = ["mobile", "grocery", "appliance"] as const;
 
 export function XrayScreen() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -83,10 +82,9 @@ export function XrayScreen() {
     setError(null);
     setLive(false);
     try {
-      const { results } = await api<{ results: { product: Product; summary: PriceSummary | null }[] }>("/api/products/featured?limit=40");
-      const cat = DEMO_SETS[demoIdx % DEMO_SETS.length];
+      const { products } = await api<{ products: Product[] }>(`/api/xray/shelf?set=${demoIdx}`);
       setDemoIdx((i) => i + 1);
-      const shelf = results.filter((r): r is ShelfItem => r.product.category === cat && !!r.summary).slice(0, 4);
+      const shelf: ShelfItem[] = products.flatMap((product) => (product.price ? [{ product, summary: product.price }] : [])).slice(0, 4);
       if (shelf.length === 0) throw new Error("empty demo shelf");
       const { dataUrl, hints } = drawDemoShelf(shelf);
       setAspect(1200 / 900);
@@ -284,10 +282,10 @@ function Badge({ item, index, onTap }: { item: XrayItem; index: number; onTap: (
         }`}
       >
         <span className="text-[12px] font-black leading-5">
-          {style ? style.label : item.match ? "قیمت آنلاین" : "ناشناس"}
+          {style ? style.label : item.match ? "قیمت بازار" : "ناشناس"}
         </span>
         {median ? (
-          <span className="tabular whitespace-nowrap text-[10px] font-semibold leading-4 opacity-95">آنلاین {formatTomanShort(median)}</span>
+          <span className="tabular whitespace-nowrap text-[10px] font-semibold leading-4 opacity-95">بازار {formatTomanShort(median)}</span>
         ) : null}
       </span>
     </button>
@@ -311,7 +309,7 @@ function BadgeSheet({ item, onClose }: { item: XrayItem; onClose: () => void }) 
             <div className="flex items-start gap-3">
               {style && <span className={`mt-1.5 size-3 shrink-0 rounded-full ${style.bg}`} />}
               <div className="min-w-0 flex-1">
-                <div className="text-[15px] font-extrabold leading-7">{m.product.nameFa}</div>
+                <div className="text-[15px] font-extrabold leading-7">{m.product.title}</div>
                 {v && <div className={`text-[14px] font-bold ${style?.fg}`}>{v.title}</div>}
               </div>
             </div>
@@ -321,7 +319,7 @@ function BadgeSheet({ item, onClose }: { item: XrayItem; onClose: () => void }) 
                 <div className="tabular text-[15px] font-extrabold">{item.storePrice ? formatToman(item.storePrice) : "—"}</div>
               </div>
               <div className="rounded-2xl bg-surface-2 p-3">
-                <div className="text-[11px] text-muted">معمول آنلاین</div>
+                <div className="text-[11px] text-muted">معمول بازار تهران</div>
                 <div className="tabular text-[15px] font-extrabold">{m.summary ? formatToman(m.summary.median) : "—"}</div>
               </div>
             </div>

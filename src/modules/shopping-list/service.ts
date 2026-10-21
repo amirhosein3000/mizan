@@ -1,7 +1,7 @@
 import "server-only";
 import { and, asc, eq } from "drizzle-orm";
 import { ensureTables } from "@/lib/db";
-import { getPriceProvider, summarizeOffers } from "@/lib/price";
+import { findMatches } from "@/lib/catalog/match";
 import { SHOPPING_SQL, shoppingItems, shoppingMeta } from "./schema";
 
 const db = () => ensureTables("shopping-list", SHOPPING_SQL);
@@ -19,21 +19,19 @@ export function getList(deviceId: string) {
 
 /** Add free-text items; each is matched to a catalog product when the match is decent. */
 export async function addItems(deviceId: string, texts: string[]) {
-  const provider = getPriceProvider();
   const now = Date.now();
   for (const [i, text] of texts.entries()) {
-    const [match] = await provider.searchProducts(text, { limit: 1 });
-    const good = match && match.score >= 0.5 ? match : null;
-    const summary = good ? summarizeOffers(await provider.getOffers(good.product.id)) : null;
+    const [match] = findMatches(text, 1);
+    const good = match && match.score >= 0.5 ? match.product : null;
     db()
       .insert(shoppingItems)
       .values({
         deviceId,
         text: text.slice(0, 120),
-        productId: good?.product.id ?? null,
-        productName: good?.product.nameFa ?? null,
-        onlineMedian: summary?.median ?? null,
-        onlineMin: summary?.min ?? null,
+        productId: good?.id ?? null,
+        productName: good?.title ?? null,
+        onlineMedian: good?.price?.median ?? null,
+        onlineMin: good?.price?.min ?? null,
         createdAt: now + i,
       })
       .run();

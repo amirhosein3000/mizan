@@ -1,72 +1,29 @@
 "use client";
-// Identify a product: photo (vision) | barcode | text. Lands on /p/[id].
+// Identify a product from a photo (vision model) -> /p/[id]. Typing goes through the AskBox.
 import { useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Barcode, Camera, ImagePlus, Search, Type } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Camera, ImagePlus } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
-import { BarcodeScanner } from "@/components/BarcodeScanner";
+import { AskBox } from "@/components/AskBox";
 import { CandidatePicker, type Candidate } from "@/components/CandidatePicker";
-import { ProductRow } from "@/components/ProductRow";
-import { Button, ErrorNote, Skeleton } from "@/components/ui";
-import { VoiceButton } from "@/components/VoiceButton";
-import { isEnabled } from "@/config/features";
+import { Button, ErrorNote } from "@/components/ui";
 import { api, errorMessage } from "@/lib/client-api";
 import { formatToman } from "@/lib/format";
 import { fileToDataUrl } from "@/lib/image";
 import type { MatchConfidence } from "@/lib/match";
-import type { Product } from "@/lib/price/types";
-
-type Mode = "photo" | "barcode" | "text";
-
-const TABS: { id: Mode; label: string; icon: typeof Camera }[] = [
-  { id: "photo", label: "عکس", icon: Camera },
-  { id: "barcode", label: "بارکد", icon: Barcode },
-  { id: "text", label: "اسم", icon: Type },
-];
 
 function productHref(id: string, price?: number | null) {
   return `/p/${encodeURIComponent(id)}${price ? `?price=${price}` : ""}`;
 }
 
 export function ScanScreen() {
-  const search = useSearchParams();
-  const router = useRouter();
-  const initialMode = (search.get("mode") as Mode) || "photo";
-  const [mode, setMode] = useState<Mode>(TABS.some((t) => t.id === initialMode) ? initialMode : "photo");
-
-  function switchMode(m: Mode) {
-    setMode(m);
-    router.replace(`/scan?mode=${m}`, { scroll: false });
-  }
-
+  const [typing, setTyping] = useState(false);
   return (
     <>
-      <AppHeader title="شناسایی کالا" back="/" />
-      <div className="px-4">
-        <div className="grid grid-cols-3 gap-1 rounded-2xl bg-surface-2 p-1" role="tablist">
-          {TABS.map((t) => {
-            const Icon = t.icon;
-            const active = mode === t.id;
-            return (
-              <button
-                key={t.id}
-                role="tab"
-                aria-selected={active}
-                onClick={() => switchMode(t.id)}
-                className={`flex h-11 items-center justify-center gap-1.5 rounded-xl text-[14px] font-bold transition-colors ${
-                  active ? "bg-surface text-brand shadow-sm" : "text-muted"
-                }`}
-              >
-                <Icon className="size-[18px]" /> {t.label}
-              </button>
-            );
-          })}
-        </div>
-        <div className="mt-4 pb-6">
-          {mode === "photo" && <PhotoTab onTypeInstead={() => switchMode("text")} />}
-          {mode === "barcode" && <BarcodeTab onTypeInstead={() => switchMode("text")} />}
-          {mode === "text" && <TextTab initialQuery={search.get("q") ?? ""} />}
-        </div>
+      <AppHeader title="شناسایی با عکس" back="/" />
+      <div className="flex flex-col gap-4 px-4 pb-6">
+        {typing && <AskBox autoFocus placeholder="اسم یا مدلش رو بنویس…" />}
+        <PhotoTab onTypeInstead={() => setTyping(true)} />
       </div>
     </>
   );
@@ -175,7 +132,7 @@ function PhotoTab({ onTypeInstead }: { onTypeInstead: () => void }) {
                 {result.reading && (
                   <p className="mt-1 text-[12px] text-muted">
                     چیزی که خوندم: <span dir="ltr">{result.reading.query}</span>
-                    {result.reading.price ? ` · قیمت روی برچسب: ${formatToman(result.reading.price)}` : ""}
+                    {result.reading.price ? ` • قیمت روی برچسب: ${formatToman(result.reading.price)}` : ""}
                   </p>
                 )}
               </div>
@@ -194,109 +151,6 @@ function PhotoTab({ onTypeInstead }: { onTypeInstead: () => void }) {
           </Button>
         </div>
       )}
-    </div>
-  );
-}
-
-function BarcodeTab({ onTypeInstead }: { onTypeInstead: () => void }) {
-  const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [scanKey, setScanKey] = useState(0);
-
-  async function onDetected(code: string) {
-    setError(null);
-    try {
-      const { product } = await api<{ product: Product }>(`/api/products/barcode?code=${encodeURIComponent(code)}`);
-      router.push(productHref(product.id));
-    } catch (err) {
-      setError(errorMessage(err));
-    }
-  }
-
-  return (
-    <div className="flex flex-col gap-3">
-      <BarcodeScanner key={scanKey} onDetected={onDetected} />
-      {error && (
-        <div className="flex flex-col gap-2">
-          <ErrorNote message={error} onRetry={() => setScanKey((k) => k + 1)} />
-          <Button variant="secondary" onClick={onTypeInstead}>
-            جستجو با اسم
-          </Button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-interface SearchResult {
-  product: Product;
-  score: number;
-  summary: Candidate["summary"];
-}
-
-function TextTab({ initialQuery }: { initialQuery: string }) {
-  const [q, setQ] = useState(initialQuery);
-  const [found, setResults] = useState<SearchResult[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const query = q.trim();
-    if (query.length < 2) return;
-    const ctrl = new AbortController();
-    const t = setTimeout(async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await api<{ results: SearchResult[] }>(`/api/products/search?q=${encodeURIComponent(query)}&limit=12`, {
-          signal: ctrl.signal,
-        });
-        setResults(res.results);
-      } catch (err) {
-        if ((err as Error)?.name !== "AbortError") setError(errorMessage(err));
-      } finally {
-        setLoading(false);
-      }
-    }, 220);
-    return () => {
-      clearTimeout(t);
-      ctrl.abort();
-    };
-  }, [q]);
-
-  // Short queries show nothing (stale results from a longer query are hidden).
-  const results = q.trim().length >= 2 ? found : null;
-
-  return (
-    <div className="flex flex-col gap-3">
-      <label className="flex items-center gap-2 rounded-2xl border-2 border-line bg-surface px-4 focus-within:border-brand">
-        <Search className="size-5 text-muted" />
-        <input
-          autoFocus
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="مثلاً گلکسی A56 یا Redmi Note 14"
-          className="h-13 min-w-0 flex-1 bg-transparent py-3 text-[16px] outline-none"
-          enterKeyHint="search"
-          type="search"
-        />
-        {isEnabled("voice") && <VoiceButton context="search" onText={setQ} className="-me-2" />}
-      </label>
-      {error && <ErrorNote message={error} />}
-      {loading && !results && (
-        <div className="space-y-2">
-          <Skeleton className="h-[72px]" />
-          <Skeleton className="h-[72px]" />
-        </div>
-      )}
-      {results && results.length === 0 && (
-        <p className="p-4 text-center text-[14px] text-muted">چیزی پیدا نشد. اسم برند یا مدل رو امتحان کن.</p>
-      )}
-      <div className="flex flex-col gap-2">
-        {results?.map((r) => (
-          <ProductRow key={r.product.id} product={r.product} summary={r.summary} href={productHref(r.product.id)} />
-        ))}
-      </div>
     </div>
   );
 }

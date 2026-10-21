@@ -151,7 +151,7 @@ export function ListScreen() {
                     <div className={`text-[15px] font-bold ${item.done ? "line-through" : ""}`}>{item.text}</div>
                     {item.productId ? (
                       <Link href={`/p/${encodeURIComponent(item.productId)}`} className="mt-0.5 block truncate text-[11px] text-muted">
-                        {item.productName} · آنلاین حدود {formatTomanShort(item.onlineMedian ?? 0)}
+                        {item.productName} • آنلاین حدود {formatTomanShort(item.onlineMedian ?? 0)}
                       </Link>
                     ) : (
                       <div className="mt-0.5 text-[11px] text-muted">قیمت آنلاینش رو پیدا نکردم</div>

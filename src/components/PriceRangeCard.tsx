@@ -1,5 +1,5 @@
 import { formatNumber, formatToman, formatTomanShort } from "@/lib/format";
-import type { PriceSummary } from "@/lib/price/types";
+import type { PriceSummary } from "@/lib/catalog/types";
 import type { VerdictLevel } from "@/lib/verdict";
 import { Card } from "./ui";
 
@@ -10,14 +10,18 @@ const MARKER_COLOR: Record<VerdictLevel, string> = {
 };
 
 /**
- * Online price range, Torob-style: min / typical / max across sellers.
+ * Listed price range across Tehran shops (dataset): min / typical / max.
  * RTL: cheapest sits on the right (inline-start), priciest on the left.
  */
 export function PriceRangeCard({
   summary,
   storePrice,
   level,
+  title = "قیمت ثبت‌شده در تهران",
+  children,
 }: {
+  title?: string;
+  children?: React.ReactNode;
   summary: PriceSummary;
   storePrice?: number | null;
   level?: VerdictLevel;
@@ -30,8 +34,8 @@ export function PriceRangeCard({
   return (
     <Card>
       <div className="flex items-baseline justify-between">
-        <h3 className="text-[15px] font-extrabold">قیمت آنلاین</h3>
-        <span className="text-xs text-muted">از {formatNumber(summary.count)} فروشنده</span>
+        <h3 className="text-[15px] font-extrabold">{title}</h3>
+        <span className="text-xs text-muted">از {formatNumber(summary.count)} فروشگاه</span>
       </div>
 
       <div className="mt-3 flex items-end justify-between gap-2 text-center">
@@ -71,14 +75,10 @@ export function PriceRangeCard({
       </div>
       {storePrice ? (
         <p className="tabular mt-1 text-center text-xs text-muted">
-          نقطه‌ی رنگی = قیمت مغازه ({formatToman(storePrice)})
+          نقطه‌ی رنگی = قیمت این مغازه ({formatToman(storePrice)})
         </p>
       ) : null}
-      {summary.cheapestSeller && (
-        <p className="mt-2 text-xs text-muted">
-          ارزون‌ترین پیشنهاد: <b className="text-ink">{summary.cheapestSeller}</b>
-        </p>
-      )}
+      {children}
     </Card>
   );
 }

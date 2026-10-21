@@ -13,7 +13,7 @@ const vazirmatn = localFont({
 });
 
 export const metadata: Metadata = {
-  title: { default: `${APP_NAME} — ${TAGLINE}`, template: `%s · ${APP_NAME}` },
+  title: { default: `${APP_NAME} — ${TAGLINE}`, template: `%s • ${APP_NAME}` },
   description: "دستیار هوشمند خرید حضوری: قیمت مغازه رو با قیمت آنلاین مقایسه کن. ساخته‌شده برای هکاتون ترب.",
   applicationName: APP_NAME_EN,
   appleWebApp: { capable: true, title: APP_NAME, statusBarStyle: "default" },

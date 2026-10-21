@@ -44,3 +44,9 @@ next-env.d.ts
 /data/*.db
 /data/*.db-*
 !.env.example
+
+# challenge dataset (CSV) and the catalog built from it
+/dataset
+/catalog/*.db
+/catalog/*.db-*
+/catalog/*.tmp

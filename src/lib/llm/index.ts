@@ -14,7 +14,7 @@ class MockClient implements LLMClient {
     return "این یک پاسخ نمایشی است (حالت MOCK).";
   }
   async transcribe(): Promise<string> {
-    return "قیمت گلکسی آ ۵۶ چنده";
+    return "هدفون انکر زیر ۵ میلیون نزدیک جمهوری";
   }
 }
 

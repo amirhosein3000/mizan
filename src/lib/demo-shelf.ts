@@ -4,7 +4,7 @@
 // no camera, no real shelf. With a real vision model the drawn text is legible,
 // so the model actually reads names and prices off it.
 import { formatNumber, roundNice } from "./format";
-import type { PriceSummary, Product } from "./price/types";
+import type { PriceSummary, Product } from "./catalog/types";
 
 export interface ShelfItem {
   product: Product;
@@ -65,20 +65,22 @@ export function drawDemoShelf(items: ShelfItem[]): { dataUrl: string; hints: str
 
     ctx.fillStyle = "#ffffff";
     ctx.textAlign = "center";
-    ctx.direction = "ltr";
-    ctx.font = `800 40px ${font}`;
-    ctx.fillText(item.product.brand.toUpperCase(), x + w / 2, y + 62);
-    // Shrink the model line until it fits the box.
-    const model = item.product.model.replace(/ RAM \d+GB$/, "");
-    let size = 34;
-    do {
-      ctx.font = `700 ${size}px ${font}`;
-      size -= 2;
-    } while (ctx.measureText(model).width > w - 36 && size > 16);
-    ctx.fillText(model, x + w / 2, y + 110);
     ctx.direction = "rtl";
-    ctx.font = `500 24px ${font}`;
-    ctx.fillText(item.product.subcategory, x + w / 2, y + h - 30);
+    ctx.font = `800 38px ${font}`;
+    ctx.fillText(item.product.brand ?? "", x + w / 2, y + 60);
+    // Up to two lines of the title, shrunk until each fits the box.
+    const words = item.product.title.split("|")[0].trim().split(/\s+/).slice(0, 8);
+    const half = Math.ceil(words.length / 2);
+    [words.slice(0, half).join(" "), words.slice(half).join(" ")].forEach((line, li) => {
+      let size = 30;
+      do {
+        ctx.font = `700 ${size}px ${font}`;
+        size -= 2;
+      } while (ctx.measureText(line).width > w - 36 && size > 14);
+      ctx.fillText(line, x + w / 2, y + 104 + li * 38);
+    });
+    ctx.font = `500 22px ${font}`;
+    ctx.fillText(item.product.category, x + w / 2, y + h - 26);
 
     // Price tag
     const tw = 300;

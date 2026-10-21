@@ -1,7 +1,8 @@
-// The price verdict: is the in-store price a good deal vs the online market?
+// The price verdict: is the in-store price a good deal vs. the prices other
+// Tehran shops listed on Torob (dataset)?
 // Pure and synchronous so it runs instantly on the client and in tests.
 import { formatPercent, formatToman, roundNice } from "./format";
-import type { CategoryId, PriceSummary } from "./price/types";
+import type { PriceSummary, ProductKind } from "./catalog/types";
 
 export type VerdictLevel = "good" | "fair" | "high";
 
@@ -55,19 +56,19 @@ export function computeVerdict(
     reason = `این قیمت از قیمت مصرف‌کننده‌ی چاپ‌شده (${formatToman(opts.printedPrice!)}) بیشتره. فروش بالاتر از قیمت درج‌شده مجاز نیست.`;
   } else if (suspiciouslyCheap) {
     title = "ارزون‌تر از همه — یه نگاه دقیق بنداز";
-    reason = `${formatPercent(Math.abs(storePrice - min) / min)} زیر ارزون‌ترین فروشنده‌ی آنلاینه. اصالت کالا، گارانتی و پلمپ بودنش رو حتماً چک کن.`;
+    reason = `${formatPercent(Math.abs(storePrice - min) / min)} زیر ارزون‌ترین قیمت ثبت‌شده در تهرانه. اصالت کالا، گارانتی و پلمپ بودنش رو حتماً چک کن.`;
   } else if (level === "good") {
     title = pct < -0.03 ? "معامله‌ی خوبیه!" : "قیمت خوبیه";
     reason =
       diffFromMedian <= 0
-        ? `${formatToman(Math.abs(diffFromMedian))} ارزون‌تر از قیمت معمول آنلاینه.`
-        : "تقریباً هم‌قیمت بازار آنلاینه. اگه گارانتیش اوکیه، بخر.";
+        ? `${formatToman(Math.abs(diffFromMedian))} ارزون‌تر از قیمت معمول بازار تهرانه.`
+        : "تقریباً هم‌قیمت بازار تهرانه. اگه گارانتیش اوکیه، بخر.";
   } else if (level === "fair") {
     title = "منصفانه‌ست، ولی جای چونه داره";
-    reason = `${formatPercent(pct)} بالاتر از قیمت معمول آنلاینه (${formatToman(diffFromMedian)} بیشتر).`;
+    reason = `${formatPercent(pct)} بالاتر از قیمت معمول بازار تهرانه (${formatToman(diffFromMedian)} بیشتر).`;
   } else {
     title = "گرونه!";
-    reason = `${formatPercent(pct)} بالاتر از قیمت معمول آنلاینه؛ یعنی ${formatToman(diffFromMedian)} بیشتر. ارزون‌ترین آنلاین ${formatToman(min)} است.`;
+    reason = `${formatPercent(pct)} بالاتر از قیمت معمول بازار تهرانه؛ یعنی ${formatToman(diffFromMedian)} بیشتر. ارزون‌ترین قیمت ثبت‌شده ${formatToman(min)} است.`;
   }
 
   return {
@@ -90,16 +91,16 @@ export function negotiationLine(v: Verdict, summary: PriceSummary): string {
     return `ببخشید، قیمت روی بسته کمتره. لطفاً با همون قیمت مصرف‌کننده حساب کنید.`;
   }
   if (v.level === "high") {
-    return `آقا/خانم، همین مدل رو آنلاین از ${formatToman(summary.min)} می‌فروشن. اگه ${formatToman(v.targetPrice)} حساب کنید، همین الان برمی‌دارم.`;
+    return `آقا/خانم، همین مدل رو مغازه‌های دیگه‌ی تهران از ${formatToman(summary.min)} ثبت کردن. اگه ${formatToman(v.targetPrice)} حساب کنید، همین الان برمی‌دارم.`;
   }
   if (v.level === "fair") {
-    return `قیمتتون منصفانه‌ست، ولی آنلاین ارزون‌ترم هست. ${formatToman(v.targetPrice)} بدید، نقدی می‌خرم.`;
+    return `قیمتتون منصفانه‌ست، ولی جاهای دیگه ارزون‌ترم هست. ${formatToman(v.targetPrice)} بدید، نقدی می‌خرم.`;
   }
   return `قیمت خوبیه. اگه ${formatToman(v.targetPrice)} حساب کنید یا یه هدیه کنارش بذارید، معامله تمومه.`;
 }
 
-/** What to check before paying, per category. */
-export const CHECKLISTS: Record<CategoryId, string[]> = {
+/** What to check before paying, per product family. */
+export const CHECKLISTS: Record<ProductKind, string[]> = {
   mobile: [
     "رجیستری: با شماره‌گیری *#06# شناسه (IMEI) رو ببین و در سامانه‌ی همتا استعلام کن.",
     "نوع گارانتی: شرکتی یا رسمی؟ اسم شرکت و مدت رو روی کارت گارانتی ببین.",
@@ -118,10 +119,10 @@ export const CHECKLISTS: Record<CategoryId, string[]> = {
     "هزینه‌ی ارسال و نصب جداست یا داخل قیمته؟",
     "سال تولید و سالم بودن کارتن و بدنه رو قبل از تحویل چک کن.",
   ],
-  grocery: [
-    "قیمت مصرف‌کننده‌ی روی بسته رو ببین؛ فروش بالاتر از اون مجاز نیست (سامانه‌ی ۱۲۴).",
-    "تاریخ تولید و انقضا.",
-    "پروانه‌ی بهداشت و برچسب سیب سلامت.",
-    "بسته‌بندی سالم و بدون باد کردگی یا نشتی.",
+  other: [
+    "مدل و مشخصات روی جعبه رو با چیزی که خواستی تطبیق بده.",
+    "گارانتی یا ضمانت اصالت: کتبی و با مهر فروشگاه بگیر.",
+    "فاکتور رسمی بگیر؛ برای مرجوعی و گارانتی لازمه.",
+    "سالم بودن کالا و پلمپ رو همون‌جا جلوی فروشنده چک کن.",
   ],
 };

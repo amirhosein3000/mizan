@@ -1,14 +1,11 @@
-// Fuzzy product matching: free text (typed, spoken, or extracted by the vision
-// model) -> ranked catalog products with a 0..1 confidence.
+// Fuzzy matching helpers: how well a free-text reading (typed, spoken, or read off
+// a photo by the vision model) matches a catalog product title, 0..1.
 import { normalizeText, STOP_WORDS, tokenize } from "./text";
-import type { Product, ProductMatch } from "./price/types";
 
-interface Indexed {
-  product: Product;
-  tokens: Set<string>;
-  modelTokens: string[];
-  brandTokens: Set<string>;
-  compact: string;
+export interface ScoredMatch<P> {
+  product: P;
+  /** 0..1 */
+  score: number;
 }
 
 function meaningful(tokens: string[]): string[] {
@@ -46,56 +43,21 @@ export function dice(a: string, b: string): number {
   return (2 * overlap) / (a.length - 1 + (b.length - 1));
 }
 
-export function indexProducts(products: Product[]): Indexed[] {
-  return products.map((product) => {
-    const all = meaningful(
-      tokenize([product.nameEn, product.nameFa, product.brand, product.brandFa, product.model].join(" ")),
-    );
-    const modelTokens = meaningful(tokenize(product.model));
-    return {
-      product,
-      tokens: new Set(all),
-      modelTokens,
-      brandTokens: new Set(tokenize(`${product.brand} ${product.brandFa}`)),
-      compact: normalizeText(`${product.brand} ${product.model}`).replace(/ /g, ""),
-    };
-  });
-}
-
-function scoreOne(queryTokens: string[], queryCompact: string, item: Indexed): number {
-  if (queryTokens.length === 0) return 0;
+/**
+ * Score a reading against a product title. Token coverage (with unit-suffix
+ * tolerance: "256" ~ "256gb") plus a character-bigram term for OCR noise.
+ */
+export function scoreMatch(query: string, title: string): number {
+  const q = meaningful(tokenize(query));
+  if (!q.length) return 0;
+  const t = meaningful(tokenize(title));
   let hit = 0;
-  for (const q of queryTokens) {
-    for (const t of item.tokens) {
-      if (tokensMatch(q, t)) {
-        hit++;
-        break;
-      }
-    }
-  }
-  const queryCoverage = hit / queryTokens.length;
-  // How much of the product's own model string the query explains — this is
-  // what separates "A56 128GB" from "A56 256GB".
-  let modelHit = 0;
-  for (const m of item.modelTokens) {
-    if (queryTokens.some((q) => tokensMatch(q, m))) modelHit++;
-  }
-  const modelCoverage = item.modelTokens.length ? modelHit / item.modelTokens.length : 0;
-  const brandHit = queryTokens.some((q) => item.brandTokens.has(q)) ? 1 : 0;
-  const fuzzy = dice(queryCompact, item.compact);
-  // Typos and vision OCR noise are handled by the dice term.
-  return Math.min(1, 0.45 * queryCoverage + 0.3 * modelCoverage + 0.1 * brandHit + 0.15 * fuzzy);
-}
-
-export function searchIndex(index: Indexed[], query: string, limit = 10): ProductMatch[] {
-  const queryTokens = meaningful(tokenize(query));
-  const queryCompact = normalizeText(query).replace(/ /g, "");
-  if (queryTokens.length === 0) return [];
-  return index
-    .map((item) => ({ product: item.product, score: scoreOne(queryTokens, queryCompact, item) }))
-    .filter((m) => m.score > 0.2)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, limit);
+  for (const a of q) if (t.some((b) => tokensMatch(a, b))) hit++;
+  const cov = hit / q.length;
+  // How much of the title the query explains separates "A56 128GB" from "A56 256GB".
+  const titleCov = t.length ? t.filter((b) => q.some((a) => tokensMatch(a, b))).length / t.length : 0;
+  const fuzzy = dice(normalizeText(query).replace(/ /g, ""), normalizeText(title).replace(/ /g, ""));
+  return Math.min(1, 0.6 * cov + 0.2 * titleCov + 0.2 * fuzzy);
 }
 
 export type MatchConfidence = "high" | "medium" | "low";
@@ -104,7 +66,7 @@ export type MatchConfidence = "high" | "medium" | "low";
  * Decide whether to jump straight to the top match or ask the user to pick.
  * High = clearly the best and a strong score; otherwise show top candidates.
  */
-export function matchConfidence(matches: ProductMatch[]): MatchConfidence {
+export function matchConfidence(matches: ScoredMatch<unknown>[]): MatchConfidence {
   if (matches.length === 0) return "low";
   const [first, second] = matches;
   const margin = second ? first.score - second.score : first.score;

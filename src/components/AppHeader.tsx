@@ -3,7 +3,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
-import { ModeBadge } from "./ModeBadge";
 
 /** Page header. In RTL the back chevron points right. */
 export function AppHeader({ title, back, action }: { title: ReactNode; back?: string | true; action?: ReactNode }) {
@@ -25,7 +24,6 @@ export function AppHeader({ title, back, action }: { title: ReactNode; back?: st
           </button>
         ))}
       <h1 className="min-w-0 flex-1 truncate text-[17px] font-extrabold">{title}</h1>
-      <ModeBadge />
       {action}
     </header>
   );

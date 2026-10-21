@@ -76,3 +76,90 @@ export function Chip({ children, className = "" }: { children: ReactNode; classN
     </span>
   );
 }
+
+export type Tone = "good" | "fair" | "high" | "info" | "brand" | "muted";
+
+const TONES: Record<Tone, string> = {
+  good: "bg-good-soft text-good",
+  fair: "bg-fair-soft text-fair",
+  high: "bg-high-soft text-high",
+  info: "bg-info-soft text-info",
+  brand: "bg-brand-soft text-brand",
+  muted: "bg-surface-2 text-muted",
+};
+
+/** Small status label. */
+export function Pill({ tone = "muted", children, className = "" }: { tone?: Tone; children: ReactNode; className?: string }) {
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11.5px] font-bold leading-5 ${TONES[tone]} ${className}`}>
+      {children}
+    </span>
+  );
+}
+
+/** Toggle chip for filters: outlined when off, filled when on. */
+export function FilterChip({
+  on,
+  onClick,
+  children,
+  className = "",
+}: {
+  on: boolean;
+  onClick: () => void;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={on}
+      className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[13px] font-bold transition-colors ${
+        on ? "border-brand bg-brand text-white" : "border-line bg-surface text-ink active:bg-surface-2"
+      } ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** Horizontal tab switch. */
+export function Segmented<T extends string>({
+  value,
+  options,
+  onChange,
+  className = "",
+}: {
+  value: T;
+  options: { value: T; label: ReactNode }[];
+  onChange: (v: T) => void;
+  className?: string;
+}) {
+  return (
+    <div className={`no-scrollbar flex gap-1 overflow-x-auto rounded-2xl bg-surface-2 p-1 ${className}`} role="tablist">
+      {options.map((o) => (
+        <button
+          key={o.value}
+          role="tab"
+          aria-selected={value === o.value}
+          onClick={() => onChange(o.value)}
+          className={`h-9 shrink-0 grow rounded-xl px-3 text-[13px] font-bold transition-colors ${
+            value === o.value ? "bg-surface text-ink shadow-[0_1px_3px_rgba(20,10,60,0.12)]" : "text-muted"
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function EmptyState({ icon, title, children }: { icon?: ReactNode; title: string; children?: ReactNode }) {
+  return (
+    <div className="flex flex-col items-center gap-2 rounded-[var(--radius-card)] bg-surface px-6 py-8 text-center">
+      {icon && <span className="grid size-12 place-items-center rounded-2xl bg-surface-2 text-muted">{icon}</span>}
+      <div className="text-[15px] font-extrabold">{title}</div>
+      {children && <div className="text-[13px] leading-6 text-muted">{children}</div>}
+    </div>
+  );
+}

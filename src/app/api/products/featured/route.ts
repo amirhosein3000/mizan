@@ -1,11 +1,10 @@
 import { connection } from "next/server";
-import { getPriceProvider } from "@/lib/price";
-import { handle } from "@/lib/http";
-import { productsWithSummaries } from "@/lib/product-service";
+import { getCatalog } from "@/lib/catalog";
+import { withShopStats } from "@/lib/agent/shops-service";
+import { contextFromRequest, handle } from "@/lib/http";
 
 export const GET = handle(async (req: Request) => {
   await connection();
-  const limit = Math.min(40, Number(new URL(req.url).searchParams.get("limit") ?? 12) || 12);
-  const products = await getPriceProvider().listFeatured(limit);
-  return Response.json({ results: await productsWithSummaries(products) });
+  const limit = Math.min(24, Number(new URL(req.url).searchParams.get("limit") ?? 10) || 10);
+  return Response.json({ results: withShopStats(getCatalog().featured(limit), contextFromRequest(req)) });
 });

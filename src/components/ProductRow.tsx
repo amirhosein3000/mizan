@@ -1,45 +1,39 @@
+"use client";
 import Link from "next/link";
-import { formatToman } from "@/lib/format";
-import type { PriceSummary, Product } from "@/lib/price/types";
-import { CATEGORY_ICONS, CATEGORY_TINT, SUBCATEGORY_ICONS } from "./icons";
-import { Package } from "lucide-react";
+import { Check, CreditCard, MapPin, Store } from "lucide-react";
+import type { Product } from "@/lib/catalog/types";
+import { formatNumber, formatTomanShort } from "@/lib/format";
+import { formatDistance } from "@/lib/shop/geo";
+import type { ShopStats } from "@/lib/agent/types";
+import { ProductImage } from "./ProductImage";
 
-export function ProductIconTile({ product, size = "md" }: { product: Pick<Product, "category" | "subcategory">; size?: "sm" | "md" | "lg" }) {
-  const Icon = SUBCATEGORY_ICONS[product.subcategory] ?? CATEGORY_ICONS[product.category] ?? Package;
-  const box = size === "lg" ? "size-16 rounded-2xl" : size === "sm" ? "size-10 rounded-xl" : "size-12 rounded-2xl";
-  const icon = size === "lg" ? "size-8" : size === "sm" ? "size-5" : "size-6";
-  return (
-    <span className={`grid shrink-0 place-items-center ${box} ${CATEGORY_TINT[product.category] ?? "bg-surface-2 text-muted"}`}>
-      <Icon className={icon} strokeWidth={1.8} />
-    </span>
-  );
+/** Price range of listed prices: «۳٫۲ تا ۴٫۶ میلیون». */
+export function priceRange(p: Pick<Product, "price">): string {
+  if (!p.price) return "قیمت ثبت نشده";
+  const { min, max } = p.price;
+  return min === max ? formatTomanShort(min) : `${formatTomanShort(min)} تا ${formatTomanShort(max)}`;
 }
 
+/** Compact row: picker lists, history, alternatives. */
 export function ProductRow({
   product,
-  summary,
   href,
   trailing,
   onClick,
+  sub,
 }: {
   product: Product;
-  summary?: PriceSummary | null;
   href?: string;
   trailing?: React.ReactNode;
   onClick?: () => void;
+  sub?: React.ReactNode;
 }) {
   const body = (
     <>
-      <ProductIconTile product={product} />
+      <ProductImage product={product} size={52} />
       <span className="min-w-0 flex-1">
-        <span className="line-clamp-2 text-[14px] font-semibold leading-6">{product.nameFa}</span>
-        {summary ? (
-          <span className="tabular mt-0.5 block text-[13px] text-muted">
-            از <b className="font-bold text-ink">{formatToman(summary.min)}</b>
-          </span>
-        ) : (
-          <span className="mt-0.5 block text-[13px] text-muted">قیمت آنلاین موجود نیست</span>
-        )}
+        <span className="line-clamp-2 text-[14px] font-semibold leading-6">{product.title}</span>
+        <span className="tabular mt-0.5 block text-[12.5px] text-muted">{sub ?? priceRange(product)}</span>
       </span>
       {trailing}
     </>
@@ -55,5 +49,73 @@ export function ProductRow({
     <button type="button" onClick={onClick} className={cls}>
       {body}
     </button>
+  );
+}
+
+/** Search result card: what it is, what it costs in Tehran, and where you can get it. */
+export function ProductCard({
+  product,
+  stats,
+  hiddenCount,
+  compared,
+  onCompare,
+}: {
+  product: Product;
+  stats: ShopStats;
+  hiddenCount?: number;
+  compared?: boolean;
+  onCompare?: () => void;
+}) {
+  return (
+    <div className="rounded-[var(--radius-card)] bg-surface p-3">
+      <Link href={`/p/${encodeURIComponent(product.id)}`} className="flex gap-3">
+        <ProductImage product={product} size={76} />
+        <div className="min-w-0 flex-1">
+          <div className="line-clamp-2 text-[14px] font-bold leading-6">{product.title}</div>
+          <div className="mt-0.5 truncate text-[11.5px] text-muted">
+            {product.category}
+            {product.brand ? ` • ${product.brand}` : ""}
+          </div>
+          <div className="tabular mt-1 text-[14px] font-extrabold">
+            {priceRange(product)}
+            {product.price && <span className="text-[11px] font-bold text-muted"> تومان</span>}
+          </div>
+        </div>
+      </Link>
+      <div className="mt-2.5 flex items-center gap-2 border-t border-line pt-2.5">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-muted">
+          <span className="inline-flex items-center gap-1">
+            <Store className="size-3.5" />
+            {stats.shops ? `${formatNumber(stats.shops)} فروشگاه` : hiddenCount ? "با فیلترهات فروشگاهی نموند" : "فروشگاه حضوری ثبت نشده"}
+          </span>
+          {stats.openNow > 0 && <span className="font-bold text-good">{formatNumber(stats.openNow)} تا بازه</span>}
+          {stats.nearestM !== null && (
+            <span className="inline-flex items-center gap-1">
+              <MapPin className="size-3.5" />
+              {formatDistance(stats.nearestM)}
+            </span>
+          )}
+          {stats.installment > 0 && (
+            <span className="inline-flex items-center gap-1">
+              <CreditCard className="size-3.5" />
+              قسطی
+            </span>
+          )}
+          {stats.confirmed > 0 && <span className="font-bold text-good">✓ {formatNumber(stats.confirmed)} تأییدشده</span>}
+        </div>
+        {onCompare && (
+          <button
+            onClick={onCompare}
+            aria-pressed={compared}
+            className={`inline-flex h-8 shrink-0 items-center gap-1 rounded-full border px-2.5 text-[12px] font-bold ${
+              compared ? "border-brand bg-brand-soft text-brand" : "border-line text-muted"
+            }`}
+          >
+            {compared && <Check className="size-3.5" />}
+            مقایسه
+          </button>
+        )}
+      </div>
+    </div>
   );
 }

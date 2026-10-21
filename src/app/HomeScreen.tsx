@@ -1,53 +1,39 @@
 "use client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Barcode, Camera, ChevronLeft, Search, Type, Zap } from "lucide-react";
-import { ModeBadge } from "@/components/ModeBadge";
-import { ProductRow } from "@/components/ProductRow";
+import { ChevronLeft, MapPin, PhoneCall, Scale, Search, Sparkles, Store, Zap } from "lucide-react";
+import { AskBox } from "@/components/AskBox";
+import { MissionRow } from "@/components/MissionRow";
+import { ProductCard } from "@/components/ProductRow";
 import { SectionTitle, Skeleton } from "@/components/ui";
-import { LEVEL_STYLE } from "@/components/VerdictCard";
 import { isEnabled } from "@/config/features";
-import { api } from "@/lib/client-api";
-import { formatToman, timeAgo } from "@/lib/format";
-import { APP_NAME, GREETINGS, TAGLINE } from "@/lib/persona";
-import type { PriceSummary, Product } from "@/lib/price/types";
-import type { VerdictLevel } from "@/lib/verdict";
+import type { CatalogStats } from "@/lib/catalog/types";
+import type { MissionSummary } from "@/lib/agent/missions";
+import type { ProductWithStats } from "@/lib/agent/types";
+import { formatNumber } from "@/lib/format";
+import { APP_NAME, EXAMPLES, GREETING, TAGLINE } from "@/lib/persona";
+import { useShopper, withCtx } from "@/lib/shopper-store";
+import { useApi } from "@/lib/use-api";
+import { useAsk } from "@/lib/use-ask";
 
-interface HistoryItem {
-  id: number;
-  productId: string;
-  productName: string;
-  storePrice: number | null;
-  verdict: VerdictLevel | null;
-  updatedAt: number;
-}
+const STEPS = [
+  { icon: Search, title: "می‌فهمم چی می‌خوای", text: "با جمله‌ی خودت؛ بودجه و محله رو هم بگو" },
+  { icon: Scale, title: "مقایسه می‌کنم", text: "کالاها و فروشگاه‌ها، با قیمت و فاصله" },
+  { icon: PhoneCall, title: "زنگ می‌زنم", text: "موجودی و قیمت امروز رو تأیید می‌گیرم" },
+  { icon: MapPin, title: "می‌فرستمت", text: "آدرس دقیق تا طبقه و واحد، و پیگیری" },
+];
 
 export function HomeScreen() {
-  const router = useRouter();
-  const [q, setQ] = useState("");
-  const [featured, setFeatured] = useState<{ product: Product; summary: PriceSummary | null }[] | null>(null);
-  const [recent, setRecent] = useState<HistoryItem[]>([]);
-  const [totalSaved, setTotalSaved] = useState(0);
-
-  useEffect(() => {
-    api<{ results: { product: Product; summary: PriceSummary | null }[] }>("/api/products/featured")
-      .then((r) => setFeatured(r.results))
-      .catch(() => setFeatured([]));
-    if (isEnabled("history")) {
-      api<{ items: HistoryItem[]; totalSaved: number }>("/api/history")
-        .then((r) => {
-          setRecent(r.items.slice(0, 3));
-          setTotalSaved(r.totalSaved);
-        })
-        .catch(() => {});
-    }
-  }, []);
+  const { ctx, query } = useShopper();
+  const { ask } = useAsk();
+  const featured = useApi<{ results: ProductWithStats[] }>(withCtx("/api/products/featured?limit=8", query));
+  const missions = useApi<{ missions: MissionSummary[] }>(isEnabled("track") ? "/api/missions" : null);
+  const stats = useApi<{ stats: CatalogStats }>("/api/areas");
+  const active = (missions.data?.missions ?? []).filter((m) => !["bought", "cancelled"].includes(m.status)).slice(0, 2);
 
   return (
-    <main className="px-4 pb-6 pt-[calc(0.75rem+env(safe-area-inset-top))]">
+    <main className="px-4 pb-8 pt-[calc(0.75rem+env(safe-area-inset-top))]">
       {/* Brand row */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="grid size-10 place-items-center rounded-2xl bg-gradient-to-br from-brand to-[#8a5cf6] text-[20px] font-black text-white">
             م
@@ -57,131 +43,113 @@ export function HomeScreen() {
             <div className="text-[11px] text-muted">{TAGLINE}</div>
           </div>
         </div>
-        <ModeBadge />
+        <Link
+          href="/map"
+          className="flex max-w-[45%] items-center gap-1 rounded-full bg-surface px-3 py-1.5 text-[12px] font-bold text-muted ring-1 ring-line"
+        >
+          <MapPin className="size-3.5 shrink-0 text-brand" />
+          <span className="truncate">{ctx.origin?.label ?? "موقعیتت؟"}</span>
+        </Link>
       </div>
 
-      {/* Persona greeting */}
-      <p className="mt-4 rounded-2xl rounded-tr-md bg-surface px-4 py-3 text-[14px] leading-7 shadow-[0_1px_2px_rgba(20,10,60,0.06)]">
-        {GREETINGS[0]}
-      </p>
-
-      {/* Hero: Price X-ray */}
-      {isEnabled("xray") && (
-        <Link
-          href="/xray"
-          className="relative mt-4 block overflow-hidden rounded-3xl bg-gradient-to-br from-[#2e2378] via-brand to-[#8a5cf6] p-5 text-white shadow-[0_14px_30px_-12px_rgba(91,71,224,0.8)] active:scale-[0.99]"
-        >
-          <div className="relative z-10 max-w-[70%]">
-            <div className="flex items-center gap-1.5 text-[12px] font-bold text-[#ffd166]">
-              <Zap className="size-4" fill="currentColor" /> جدید
-            </div>
-            <div className="mt-1 text-[22px] font-black leading-9">اشعه‌ی ایکس قیمت</div>
-            <p className="mt-1 text-[13px] leading-6 opacity-90">دوربین رو بگیر سمت قفسه؛ کنار هر کالا می‌بینی خوبه، منصفانه‌ست یا گرون.</p>
-            <span className="mt-3 inline-flex h-10 items-center gap-1 rounded-xl bg-white px-4 text-[14px] font-bold text-brand-ink">
-              اسکن قفسه <ChevronLeft className="size-4" />
-            </span>
-          </div>
-          {/* Decorative badges */}
-          <div className="absolute left-3 top-6 flex flex-col items-start gap-2" aria-hidden>
-            {(["good", "high", "fair"] as const).map((l, i) => (
-              <span
-                key={l}
-                className={`pop-in rounded-xl px-2.5 py-1 text-[11px] font-black ring-2 ring-white ${LEVEL_STYLE[l].bg}`}
-                style={{ animationDelay: `${200 + i * 150}ms`, marginLeft: `${(i % 2) * 22}px` }}
-              >
-                {LEVEL_STYLE[l].label}
-              </span>
-            ))}
-          </div>
-        </Link>
-      )}
-
-      {/* Identify */}
-      {isEnabled("identify") && (
-        <>
-          <SectionTitle>کالا رو بهم نشون بده</SectionTitle>
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { href: "/scan?mode=photo", label: "عکس", icon: Camera },
-              { href: "/scan?mode=barcode", label: "بارکد", icon: Barcode },
-              { href: "/scan?mode=text", label: "اسم", icon: Type },
-            ].map(({ href, label, icon: Icon }) => (
-              <Link key={href} href={href} className="flex flex-col items-center gap-2 rounded-2xl bg-surface py-4 text-[13px] font-bold active:bg-surface-2">
-                <span className="grid size-11 place-items-center rounded-2xl bg-brand-soft text-brand">
-                  <Icon className="size-6" />
-                </span>
-                {label}
-              </Link>
-            ))}
-          </div>
-          <form
-            className="mt-3 flex items-center gap-2 rounded-2xl border-2 border-line bg-surface px-4 focus-within:border-brand"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (q.trim()) router.push(`/scan?mode=text&q=${encodeURIComponent(q.trim())}`);
-            }}
-          >
-            <Search className="size-5 text-muted" />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="جستجوی سریع: آیفون ۱۶، چای گلستان…"
-              className="h-12 min-w-0 flex-1 bg-transparent text-[15px] outline-none"
-              enterKeyHint="search"
-              type="search"
-            />
-          </form>
-        </>
-      )}
-
-      {/* Savings */}
-      {totalSaved > 0 && (
-        <div className="mt-4 flex items-center justify-between rounded-2xl bg-good-soft px-4 py-3">
-          <span className="text-[13px] font-bold text-good">تا حالا با {APP_NAME} صرفه‌جویی کردی</span>
-          <span className="tabular text-[16px] font-black text-good">{formatToman(totalSaved)}</span>
+      {/* Agent hero */}
+      <section className="relative mt-4 overflow-hidden rounded-3xl bg-gradient-to-br from-[#2e2378] via-brand to-[#7a55f0] p-4 text-white shadow-[0_14px_30px_-14px_rgba(91,71,224,0.9)]">
+        <div className="flex items-start gap-2.5">
+          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-white/15">
+            <Sparkles className="size-5" />
+          </span>
+          <p className="text-[14px] leading-7">{GREETING}</p>
         </div>
-      )}
+        <div className="mt-3 text-ink">
+          <AskBox />
+        </div>
+        <div className="no-scrollbar -mx-4 mt-3 flex gap-2 overflow-x-auto px-4">
+          {EXAMPLES.map((e) => (
+            <button
+              key={e}
+              onClick={() => ask(e)}
+              className="shrink-0 rounded-full bg-white/15 px-3 py-1.5 text-[12.5px] font-semibold text-white ring-1 ring-white/25 active:bg-white/25"
+            >
+              {e}
+            </button>
+          ))}
+        </div>
+      </section>
 
-      {/* Recent */}
-      {recent.length > 0 && (
+      {/* Active follow-ups */}
+      {active.length > 0 && (
         <>
           <SectionTitle
             action={
-              <Link href="/history" className="text-[13px] font-bold text-brand">
+              <Link href="/track" className="text-[13px] font-bold text-brand">
                 همه
               </Link>
             }
           >
-            اخیراً دیدی
+            پیگیری‌های فعال
           </SectionTitle>
           <div className="flex flex-col gap-2">
-            {recent.map((h) => (
-              <Link
-                key={h.id}
-                href={`/p/${encodeURIComponent(h.productId)}${h.storePrice ? `?price=${h.storePrice}` : ""}`}
-                className="flex items-center gap-3 rounded-2xl bg-surface px-4 py-3 active:bg-surface-2"
-              >
-                <span className={`size-2.5 shrink-0 rounded-full ${h.verdict ? LEVEL_STYLE[h.verdict].bg : "bg-line"}`} />
-                <span className="line-clamp-1 min-w-0 flex-1 text-[14px] font-semibold">{h.productName}</span>
-                <span className="shrink-0 text-[11px] text-muted">{timeAgo(h.updatedAt)}</span>
-              </Link>
+            {active.map((m) => (
+              <MissionRow key={m.id} m={m} />
             ))}
           </div>
         </>
       )}
 
-      {/* Featured */}
-      <SectionTitle>برای امتحان</SectionTitle>
+      {/* How it works */}
+      <SectionTitle>میزان چطور کمکت می‌کنه</SectionTitle>
+      <ol className="grid grid-cols-2 gap-2">
+        {STEPS.map((s, i) => (
+          <li key={s.title} className="rounded-2xl bg-surface p-3">
+            <div className="flex items-center gap-2">
+              <span className="grid size-8 place-items-center rounded-xl bg-brand-soft text-brand">
+                <s.icon className="size-4.5" />
+              </span>
+              <span className="text-[11px] font-black text-brand">{formatNumber(i + 1)}</span>
+            </div>
+            <div className="mt-2 text-[13.5px] font-extrabold">{s.title}</div>
+            <div className="mt-0.5 text-[11.5px] leading-5 text-muted">{s.text}</div>
+          </li>
+        ))}
+      </ol>
+
+      {/* In the shop */}
+      {isEnabled("xray") && (
+        <Link href="/tools" className="mt-4 flex items-center gap-3 rounded-3xl bg-ink p-4 text-white active:opacity-90">
+          <span className="grid size-11 place-items-center rounded-2xl bg-white/10 text-[#ffd166]">
+            <Zap className="size-6" fill="currentColor" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[15px] font-extrabold">الان تو مغازه‌ای؟</span>
+            <span className="block text-[12px] leading-5 opacity-80">از قفسه عکس بگیر؛ کنار هر کالا می‌بینی قیمتش نسبت به بازار تهران خوبه یا گرون.</span>
+          </span>
+          <ChevronLeft className="size-5 opacity-70" />
+        </Link>
+      )}
+
+      {/* Popular */}
+      <SectionTitle>پرطرفدار در پاساژهای تهران</SectionTitle>
       <div className="flex flex-col gap-2">
-        {featured === null
-          ? [0, 1, 2].map((i) => <Skeleton key={i} className="h-[72px]" />)
-          : featured
-              .slice(0, 6)
-              .map((f) => <ProductRow key={f.product.id} product={f.product} summary={f.summary} href={`/p/${encodeURIComponent(f.product.id)}`} />)}
+        {!featured.data
+          ? [0, 1, 2].map((i) => <Skeleton key={i} className="h-[132px]" />)
+          : featured.data.results.map((r) => <ProductCard key={r.product.id} product={r.product} stats={r.stats} hiddenCount={r.hiddenCount} />)}
       </div>
 
+      {isEnabled("seller") && (
+        <Link href="/seller" className="mt-6 flex items-center gap-3 rounded-2xl border-2 border-dashed border-line p-3.5 active:bg-surface-2">
+          <Store className="size-5 text-muted" />
+          <span className="min-w-0 flex-1 text-[13px] leading-6 text-muted">
+            فروشنده‌ای؟ <b className="text-ink">پنل فروشنده</b>: سؤال‌های میزان رو جواب بده و قیمتت رو به‌روز کن.
+          </span>
+          <ChevronLeft className="size-4 text-muted" />
+        </Link>
+      )}
+
       <p className="mt-8 text-center text-[11px] leading-5 text-muted">
-        ساخته‌شده برای هکاتون ترب · قیمت‌ها در حالت نمایشی ساختگی‌اند
+        ساخته‌شده برای هکاتون ترب • داده‌ی ترب از
+        {stats.data ? ` ${formatNumber(stats.data.stats.shops)} فروشگاه و ${formatNumber(stats.data.stats.products)} کالا` : " فروشگاه‌های تهران"}
+        <br />
+        قیمت‌ها «ثبت‌شده»‌اند تا وقتی میزان تلفنی تأییدشون نکرده.
       </p>
     </main>
   );

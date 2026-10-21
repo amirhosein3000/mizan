@@ -1,7 +1,8 @@
 import { answerProductQuestion, type ChatTurn } from "@/lib/ai/chat";
-import { fail, handle, readJson } from "@/lib/http";
+import { getCatalog } from "@/lib/catalog";
+import { shopsForProduct, withShopStats } from "@/lib/agent/shops-service";
 import { featureOff } from "@/lib/features-server";
-import { getProductBundle } from "@/lib/product-service";
+import { contextFromRequest, fail, handle, readJson } from "@/lib/http";
 
 export const POST = handle(async (req: Request) => {
   const off = featureOff("chat");
@@ -12,10 +13,13 @@ export const POST = handle(async (req: Request) => {
     .map((m) => ({ role: m.role, content: m.content.slice(0, 1000) }));
   if (!body?.productId || turns.length === 0) return fail(400, "bad_request", "پیام خالیه.");
 
-  const bundle = await getProductBundle(body.productId);
-  if (!bundle) return fail(404, "not_found", "این کالا پیدا نشد.");
+  const catalog = getCatalog();
+  const product = catalog.getProduct(body.productId);
+  if (!product) return fail(404, "not_found", "این کالا پیدا نشد.");
+  const shopper = contextFromRequest(req);
+  const { ranked } = shopsForProduct(product.id, product.category, shopper);
   const reply = await answerProductQuestion(
-    { product: bundle.product, summary: bundle.summary, alternatives: bundle.alternatives, storePrice: body.storePrice },
+    { product, shops: ranked.shops, similar: withShopStats(catalog.similar(product.id, 4), shopper), storePrice: body.storePrice },
     turns,
   );
   return Response.json({ reply });

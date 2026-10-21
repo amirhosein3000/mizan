@@ -1,6 +1,6 @@
 "use client";
 import { formatPercent } from "@/lib/format";
-import type { PriceSummary, Product } from "@/lib/price/types";
+import type { PriceSummary, Product } from "@/lib/catalog/types";
 import { ProductRow } from "./ProductRow";
 
 export interface Candidate {
@@ -17,7 +17,6 @@ export function CandidatePicker({ candidates, onPick }: { candidates: Candidate[
         <ProductRow
           key={c.product.id}
           product={c.product}
-          summary={c.summary}
           onClick={() => onPick(c)}
           trailing={
             <span className="shrink-0 rounded-full bg-surface-2 px-2 py-1 text-[11px] font-bold text-muted">

@@ -2,14 +2,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense } from "react";
-import { History, House, LayoutGrid, ScanLine, Zap } from "lucide-react";
-import { isEnabled } from "@/config/features";
+import { ClipboardList, House, Map, Sparkles, Zap } from "lucide-react";
+import { isEnabled, type FeatureId } from "@/config/features";
 
-const SIDE_ITEMS = [
+const SIDE_ITEMS: { href: string; label: string; icon: typeof House; feature: FeatureId | null }[] = [
   { href: "/", label: "خانه", icon: House, feature: null },
-  { href: "/scan", label: "شناسایی", icon: ScanLine, feature: "identify" as const },
-  { href: "/history", label: "ذخیره‌ها", icon: History, feature: "history" as const },
-  { href: "/tools", label: "ابزارها", icon: LayoutGrid, feature: null },
+  { href: "/map", label: "نقشه", icon: Map, feature: "map" },
+  { href: "/track", label: "پیگیری", icon: ClipboardList, feature: "track" },
+  { href: "/tools", label: "تو مغازه", icon: Zap, feature: null },
 ];
 
 /** Routes that run full-screen (camera) hide the nav. */
@@ -57,14 +57,12 @@ function NavBar({ pathname }: { pathname: string }) {
     <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-[480px] border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
       <div className="flex h-[64px] items-stretch px-2">
         {items.slice(0, half).map(renderItem)}
-        {isEnabled("xray") && (
-          <Link href="/xray" className="relative -mt-5 flex flex-1 flex-col items-center" aria-label="اشعه‌ی ایکس قیمت">
-            <span className="grid size-14 place-items-center rounded-full bg-gradient-to-br from-brand to-[#8a5cf6] text-white shadow-[0_8px_20px_-6px_rgba(91,71,224,0.7)] ring-4 ring-bg">
-              <Zap className="size-7" fill="currentColor" />
-            </span>
-            <span className="mt-0.5 text-[11px] font-bold text-brand">ایکس‌ری</span>
-          </Link>
-        )}
+        <Link href="/search" className="relative -mt-5 flex flex-1 flex-col items-center" aria-label="بپرس از میزان">
+          <span className="grid size-14 place-items-center rounded-full bg-gradient-to-br from-brand to-[#8a5cf6] text-white shadow-[0_8px_20px_-6px_rgba(91,71,224,0.7)] ring-4 ring-bg">
+            <Sparkles className="size-7" />
+          </span>
+          <span className="mt-0.5 text-[11px] font-bold text-brand">بپرس</span>
+        </Link>
         {items.slice(half).map(renderItem)}
       </div>
     </nav>
