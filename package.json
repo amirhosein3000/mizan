@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "check": "npm run lint && npm run typecheck && npm run test && npm run build",
+    "seed": "tsx scripts/generate-seed.ts",
+    "icons": "tsx scripts/generate-icons.ts"
   },
   "dependencies": {
     "@zxing/browser": "^0.2.1",
@@ -17,6 +22,7 @@
     "next": "16.4.2",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "server-only": "^0.0.1",
     "vazirmatn": "^33.0.3"
   },
   "devDependencies": {
@@ -32,5 +38,8 @@
     "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^5.0.5"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }
