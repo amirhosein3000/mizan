@@ -22,7 +22,7 @@ export function AskBox({ initial = "", autoFocus = false, placeholder }: { initi
       <input
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder={placeholder ?? "مثلاً: هدفون انکر زیر ۵ میلیون، قسطی"}
+        placeholder={placeholder ?? "چی می‌خوای بخری؟"}
         className="h-10 min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-muted/80"
         enterKeyHint="search"
         autoFocus={autoFocus}

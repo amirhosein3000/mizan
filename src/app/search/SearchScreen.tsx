@@ -3,7 +3,7 @@
 // agent turns into short questions, and a compare tray.
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronRight, Scale, SearchX, Sparkles, X } from "lucide-react";
 import { AskBox } from "@/components/AskBox";
 import { ContextBar, LocationSheet } from "@/components/ContextBar";
@@ -82,6 +82,15 @@ function SearchInner() {
   const [compare, setCompare] = useState<string[]>([]);
   const [locate, setLocate] = useState(params.get("locate") === "1");
   const intent = useMemo(() => readSavedIntent(said), [said]);
+  // Opened from a link or history without the parsed request: understand it now, so
+  // «زیر ۵ میلیون قسطی» in a shared URL still sets budget and installment.
+  const { ask } = useAsk();
+  const understood = useRef(false);
+  useEffect(() => {
+    if (said || understood.current) return;
+    understood.current = true;
+    void ask(q, { replace: true });
+  }, [said, q, ask]);
 
   const url = q
     ? withCtx(
@@ -97,7 +106,8 @@ function SearchInner() {
     if (sort === "cheap") list.sort((a, b) => (a.stats.cheapest ?? a.product.price?.min ?? Infinity) - (b.stats.cheapest ?? b.product.price?.min ?? Infinity));
     if (sort === "near") list.sort((a, b) => (a.stats.nearestM ?? Infinity) - (b.stats.nearestM ?? Infinity));
     if (sort === "shops") list.sort((a, b) => b.stats.shops - a.stats.shops);
-    return list;
+    // Products no shop can sell under the shopper's conditions go last (stable sort).
+    return list.sort((a, b) => Number(!a.stats.shops) - Number(!b.stats.shops));
   }, [shown, sort]);
 
   const cats = shown?.facets.categories ?? [];
@@ -124,7 +134,7 @@ function SearchInner() {
         <ContextBar className="mt-2" />
       </header>
 
-      <main className="px-4 pb-28">
+      <main className="px-4 pb-36">
         {intent && (
           <div className="rise mt-1 flex items-start gap-2 rounded-2xl bg-brand-soft px-3 py-2.5 text-[13px] leading-6 text-brand-ink">
             <Sparkles className="mt-1 size-4 shrink-0 text-brand" />
@@ -245,7 +255,7 @@ function SearchInner() {
       </main>
 
       {compare.length > 0 && (
-        <div className="fixed inset-x-0 bottom-[calc(72px+env(safe-area-inset-bottom))] z-30 mx-auto max-w-[480px] px-4">
+        <div className="fixed inset-x-0 bottom-[calc(92px+env(safe-area-inset-bottom))] z-30 mx-auto max-w-[480px] px-4">
           <div className="rise flex items-center gap-2 rounded-2xl bg-ink p-2 ps-4 text-white shadow-xl">
             <Scale className="size-5" />
             <span className="flex-1 text-[13px] font-bold">{formatNumber(compare.length)} کالا برای مقایسه</span>

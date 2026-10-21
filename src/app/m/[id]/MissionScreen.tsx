@@ -22,10 +22,10 @@ import { AppHeader } from "@/components/AppHeader";
 import { MISSION_STATUS } from "@/components/MissionRow";
 import { ProductRow } from "@/components/ProductRow";
 import { AddressLine, CallSelfButton, hhmmFromTs, MapButtons, OpenPill, StockLine, TrafficHint, TravelLine } from "@/components/shop";
-import { Button, Card, ErrorNote, Pill, SectionTitle, Skeleton, type Tone } from "@/components/ui";
+import { Button, Card, EmptyState, ErrorNote, Pill, SectionTitle, Skeleton, type Tone } from "@/components/ui";
 import type { CallView, MissionAction, MissionView } from "@/lib/agent/missions";
 import { api, errorMessage } from "@/lib/client-api";
-import { formatNumber, formatToman, formatTomanShort, parsePrice } from "@/lib/format";
+import { formatNumber, formatToman, formatTomanShort, parsePrice, toFaDigits } from "@/lib/format";
 import type { RankedShop } from "@/lib/shop/rank";
 import { usePoll } from "@/lib/use-api";
 import { useNow } from "@/lib/use-now";
@@ -64,8 +64,18 @@ export function MissionScreen({ params }: { params: Promise<{ id: string }> }) {
     return (
       <>
         <AppHeader title="تماس‌های میزان" back />
-        <div className="p-4">
-          <ErrorNote message={error} />
+        <div className="space-y-3 p-4">
+          <EmptyState icon={<PhoneOff className="size-6" />} title={error}>
+            پیگیری‌ها روی همین گوشی ذخیره می‌شن؛ اگه از گوشی دیگه‌ای شروعش کردی، اونجا ببینش.
+          </EmptyState>
+          <div className="flex gap-2">
+            <Link href="/track" className="flex h-12 flex-1 items-center justify-center rounded-2xl bg-brand text-[15px] font-bold text-white">
+              پیگیری‌های من
+            </Link>
+            <Link href="/" className="flex h-12 flex-1 items-center justify-center rounded-2xl border border-line bg-surface text-[15px] font-bold">
+              خانه
+            </Link>
+          </div>
         </div>
       </>
     );
@@ -173,7 +183,7 @@ export function MissionScreen({ params }: { params: Promise<{ id: string }> }) {
 
         {others.length > 0 && (
           <>
-            <SectionTitle>گزینه‌های تأییدشده‌ی دیگه</SectionTitle>
+            <SectionTitle>{m.best ? "گزینه‌های تأییدشده‌ی دیگه" : "گزینه‌های تأییدشده"}</SectionTitle>
             <div className="flex flex-col gap-2">
               {others.map((s) => (
                 <div key={s.shop.id} className="flex items-center gap-3 rounded-2xl bg-surface p-3">
@@ -288,7 +298,7 @@ function CallCard({ c, shops, replacedName }: { c: CallView; shops: RankedShop[]
           ) : null}
           {r.holdUntil && <span className="font-bold text-good">نگه می‌داره تا {hhmmFromTs(r.holdUntil)}</span>}
           {r.installment === true && <span className="text-muted">قسطی داره</span>}
-          {r.warranty && <span className="text-muted">{r.warranty}</span>}
+          {r.warranty && <span className="text-muted">{toFaDigits(r.warranty)}</span>}
           {r.restockDays && <span className="text-muted">موجود شدن: {r.restockDays <= 3 ? "چند روز دیگه" : "شاید هفته‌ی بعد"}</span>}
         </div>
       )}
@@ -423,7 +433,7 @@ function BestCard({ m, best, busy, act }: { m: MissionView; best: RankedShop; bu
               <ShoppingBag className="size-5" /> خریدم
             </Button>
             <Button variant="secondary" onClick={() => act({ action: "status", status: "ready" })} disabled={busy}>
-              نشد
+              نشد بخرم
             </Button>
           </div>
         ) : m.status !== "bought" ? (
@@ -442,7 +452,13 @@ function BestCard({ m, best, busy, act }: { m: MissionView; best: RankedShop; bu
             </Button>
           </div>
         ) : null}
-        <p className="text-[11.5px] leading-5 text-muted">«دوباره بپرس» درست قبل از راه افتادن دوباره زنگ می‌زنه تا موجودی و قیمت عوض نشده باشه.</p>
+        {m.status !== "bought" && (
+          <p className="text-[11.5px] leading-5 text-muted">
+            {m.status === "visiting"
+              ? "خریدی؟ «خریدم» رو بزن و قیمتی که دادی رو بگو؛ برای بقیه‌ی خریدارها هم ثبت می‌شه."
+              : "«دوباره بپرس» درست قبل از راه افتادن دوباره زنگ می‌زنه تا موجودی و قیمت عوض نشده باشه."}
+          </p>
+        )}
       </div>
       {reporting && (
         <ReportBought

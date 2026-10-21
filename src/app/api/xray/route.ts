@@ -14,12 +14,26 @@ export const POST = handle(async (req: Request) => {
 
   const started = Date.now();
   const items = await readProductsFromImage(body.image, { max: 6, hints: body.hints, withPrices: true });
-  const hinted = new Map((body.hints ?? []).map((h, i) => [i, h.split("@")[0]]));
+  // Demo-shelf hints («id@price») name the exact products and the prices printed on their tags.
+  // The model may list items in any order or misread a tag, so pair each reading with the
+  // best-matching unused hinted product and trust the hinted price.
+  const hinted = new Map((body.hints ?? []).map((h) => {
+    const [id, price] = h.split("@");
+    return [id, Number(price) || null] as const;
+  }));
+  const used = new Set<string>();
 
   const results = items.map((item, i) => {
-    // Demo-shelf hints name the exact product; otherwise match the reading.
-    const hintId = hinted.get(i);
-    const match = hintId ? findMatches(itemToQuery(item), 5).find((m) => m.product.id === hintId) ?? findMatches(itemToQuery(item), 1)[0] : findMatches(itemToQuery(item), 1)[0];
+    const candidates = findMatches(itemToQuery(item), hinted.size ? 20 : 1);
+    let match = candidates[0];
+    if (hinted.size) {
+      const hit = candidates.find((c) => hinted.has(c.product.id) && !used.has(c.product.id));
+      if (hit) {
+        used.add(hit.product.id);
+        match = { ...hit, score: Math.max(hit.score, 0.45) };
+        item = { ...item, price: hinted.get(hit.product.id) ?? item.price };
+      }
+    }
     if (!match || match.score < 0.45) {
       return { key: `x${i}`, bbox: item.bbox, label: itemToQuery(item), storePrice: item.price, match: null };
     }

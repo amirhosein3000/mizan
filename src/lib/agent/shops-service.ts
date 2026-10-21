@@ -47,10 +47,18 @@ export function shopsForProduct(productId: string, category: string, ctx: Shoppe
   return { ranked, maybe };
 }
 
-export function shopStats(r: RankResult): ShopStats {
+/**
+ * `floor`: the product's trimmed minimum listed price. Listed prices far below it are
+ * outliers (wrong unit, a part, a knock-off) and shouldn't headline "from X"; prices
+ * confirmed by a call are always trusted.
+ */
+export function shopStats(r: RankResult, floor?: number | null): ShopStats {
   const s = r.shops;
   const dists = s.map((x) => x.distanceM).filter((d): d is number => d !== null);
-  const prices = s.map((x) => x.price).filter((p): p is number => !!p);
+  const prices = s
+    .filter((x) => !floor || x.priceSource === "confirmed" || (x.price ?? 0) >= floor * 0.85)
+    .map((x) => x.price)
+    .filter((p): p is number => !!p);
   return {
     shops: s.length,
     openNow: s.filter((x) => x.status.state === "open").length,
@@ -72,7 +80,7 @@ export function withShopStats(products: Product[], ctx: ShopperContext, now = Da
       ctx,
       now,
     );
-    return { product, stats: shopStats(ranked), hiddenCount: Object.values(ranked.hidden).reduce((a, b) => a + (b ?? 0), 0) };
+    return { product, stats: shopStats(ranked, product.price?.min), hiddenCount: Object.values(ranked.hidden).reduce((a, b) => a + (b ?? 0), 0) };
   });
 }
 

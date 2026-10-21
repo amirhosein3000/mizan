@@ -38,6 +38,27 @@ export function ContextBar({ showRadius = true, className = "" }: { showRadius?:
           {ctx.visitAt ? visitLabel(ctx.visitAt, now) : "الان"}
           <ChevronDown className="size-3.5 opacity-70" />
         </FilterChip>
+        {ctx.budgetMax ? (
+          <FilterChip on onClick={() => patch({ budgetMax: null })}>
+            تا {formatTomanShort(ctx.budgetMax)}
+            <X className="size-3.5" />
+          </FilterChip>
+        ) : null}
+        {/* Conditions that are on come first, so what the agent set is visible without scrolling. */}
+        {[
+          { key: "installment", on: ctx.installment, toggle: () => patch({ installment: !ctx.installment }), icon: <CreditCard className="size-4" />, label: "قسطی" },
+          { key: "open", on: ctx.openOnly, toggle: () => patch({ openOnly: !ctx.openOnly }), icon: <Store className="size-4" />, label: ctx.visitAt ? "باز در زمان رفتن" : "الان باز" },
+          { key: "torobpay", on: ctx.torobPayInPerson, toggle: () => patch({ torobPayInPerson: !ctx.torobPayInPerson }), icon: null, label: "ترب‌پی حضوری" },
+          { key: "warranty", on: ctx.warranty, toggle: () => patch({ warranty: !ctx.warranty }), icon: <ShieldCheck className="size-4" />, label: "گارانتی‌دار" },
+        ]
+          .sort((a, b) => Number(b.on) - Number(a.on))
+          .map((c) => (
+            <FilterChip key={c.key} on={c.on} onClick={c.toggle}>
+              {c.icon}
+              {c.label}
+              {c.on && <Check className="size-3.5" />}
+            </FilterChip>
+          ))}
         {showRadius && (
           <FilterChip on={!!ctx.radiusKm} onClick={() => setSheet(ctx.origin ? "radius" : "where")}>
             <Navigation className="size-4" />
@@ -45,27 +66,6 @@ export function ContextBar({ showRadius = true, className = "" }: { showRadius?:
             <ChevronDown className="size-3.5 opacity-70" />
           </FilterChip>
         )}
-        <FilterChip on={ctx.installment} onClick={() => patch({ installment: !ctx.installment })}>
-          <CreditCard className="size-4" />
-          قسطی
-        </FilterChip>
-        <FilterChip on={ctx.openOnly} onClick={() => patch({ openOnly: !ctx.openOnly })}>
-          <Store className="size-4" />
-          {ctx.visitAt ? "باز در زمان رفتن" : "الان باز"}
-        </FilterChip>
-        <FilterChip on={ctx.torobPayInPerson} onClick={() => patch({ torobPayInPerson: !ctx.torobPayInPerson })}>
-          ترب‌پی حضوری
-        </FilterChip>
-        <FilterChip on={ctx.warranty} onClick={() => patch({ warranty: !ctx.warranty })}>
-          <ShieldCheck className="size-4" />
-          گارانتی‌دار
-        </FilterChip>
-        {ctx.budgetMax ? (
-          <FilterChip on onClick={() => patch({ budgetMax: null })}>
-            تا {formatTomanShort(ctx.budgetMax)}
-            <X className="size-3.5" />
-          </FilterChip>
-        ) : null}
       </div>
       {sheet === "where" && <LocationSheet onClose={() => setSheet(null)} />}
       {sheet === "when" && <TimeSheet onClose={() => setSheet(null)} />}

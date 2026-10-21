@@ -67,7 +67,7 @@ export function ProductCard({
   onCompare?: () => void;
 }) {
   return (
-    <div className="rounded-[var(--radius-card)] bg-surface p-3">
+    <div className={`rounded-[var(--radius-card)] bg-surface p-3 transition-opacity ${stats.shops ? "" : "opacity-70"}`}>
       <Link href={`/p/${encodeURIComponent(product.id)}`} className="flex gap-3">
         <ProductImage product={product} size={76} />
         <div className="min-w-0 flex-1">
@@ -76,10 +76,23 @@ export function ProductCard({
             {product.category}
             {product.brand ? `، ${product.brand}` : ""}
           </div>
-          <div className="tabular mt-1 text-[14px] font-extrabold">
-            {priceRange(product)}
-            {product.price && <span className="text-[11px] font-bold text-muted"> تومان</span>}
-          </div>
+          {stats.cheapest ? (
+            <>
+              <div className="tabular mt-1 text-[14px] font-extrabold">
+                <span className="text-[11.5px] font-bold text-muted">از </span>
+                {formatTomanShort(stats.cheapest)}
+                <span className="text-[11px] font-bold text-muted"> تومان</span>
+              </div>
+              {product.price && product.price.min !== product.price.max && (
+                <div className="tabular text-[11px] text-muted">بازه‌ی تهران: {priceRange(product)}</div>
+              )}
+            </>
+          ) : (
+            <div className="tabular mt-1 text-[14px] font-extrabold">
+              {priceRange(product)}
+              {product.price && <span className="text-[11px] font-bold text-muted"> تومان</span>}
+            </div>
+          )}
         </div>
       </Link>
       <div className="mt-2.5 flex items-center gap-2 border-t border-line pt-2.5">

@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { Building2, Check, CircleHelp, Footprints, Car, MapPinned, PhoneCall, ShieldCheck } from "lucide-react";
 import type { Shop } from "@/lib/catalog/types";
-import { formatNumber, formatToman, formatTomanShort, timeAgo } from "@/lib/format";
+import { formatNumber, formatToman, formatTomanShort, timeAgo, toFaDigits } from "@/lib/format";
 import { ageLabel } from "@/lib/shop/freshness";
 import { formatDistance, inTrafficZone, mapLinks } from "@/lib/shop/geo";
 import { hhmm, type OpenStatus } from "@/lib/shop/hours";
@@ -80,12 +80,23 @@ export function hhmmFromTs(ts: number): string {
 /** «پاساژ علاءالدین ۲، طبقه ۵، واحد ۵۲۱» — what you need at the door. */
 export function AddressLine({ shop, full = false }: { shop: Shop; full?: boolean }) {
   const parts = [shop.mall, shop.floor ? `طبقه ${shop.floor}` : null, shop.unit].filter(Boolean);
+  const head = toFaDigits(parts.join("، "));
+  const address = shop.address ? toFaDigits(shop.address) : null;
+  // The full address usually already spells out the mall / floor / unit; don't say it twice.
+  const repeats = !!address && !!shop.mall && address.includes(toFaDigits(shop.mall));
+  const showAddress = !!address && (!parts.length || (full && !repeats));
   return (
     <div className="flex items-start gap-1.5 text-[12.5px] leading-5 text-muted">
       <Building2 className="mt-0.5 size-3.5 shrink-0" />
       <span className="min-w-0">
-        {parts.length ? <b className="font-bold text-ink">{parts.join("، ")}</b> : null}
-        {(full || !parts.length) && shop.address ? <span className="block">{shop.address}</span> : null}
+        {full && repeats ? (
+          <b className="font-bold text-ink">{address}</b>
+        ) : (
+          <>
+            {parts.length ? <b className="font-bold text-ink">{head}</b> : null}
+            {showAddress ? <span className="block">{address}</span> : null}
+          </>
+        )}
       </span>
     </div>
   );

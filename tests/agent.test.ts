@@ -182,3 +182,20 @@ describe("shopkeeper answer from specs (no-key fallback)", () => {
     expect(specAnswer("ارسال رایگان دارید؟", specs)).toBeNull();
   });
 });
+
+describe("shopStats", () => {
+  it("ignores listed prices far below the product's trimmed minimum", async () => {
+    const { shopStats } = await import("@/lib/agent/shops-service");
+    const now = tehran(12);
+    const ranked = rankShops(
+      [
+        { shop: shop("a"), offer: offer("a", 480_000, now), confirmation: null },
+        { shop: shop("b"), offer: offer("b", 1_350_000, now), confirmation: null },
+      ],
+      DEFAULT_CONTEXT,
+      now,
+    );
+    expect(shopStats(ranked).cheapest).toBe(480_000);
+    expect(shopStats(ranked, 1_300_000).cheapest).toBe(1_350_000);
+  });
+});

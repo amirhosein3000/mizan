@@ -30,7 +30,7 @@ export function useAsk() {
   const { ctx, patch } = useShopper();
   const [busy, setBusy] = useState(false);
 
-  async function ask(text: string) {
+  async function ask(text: string, opts: { replace?: boolean } = {}) {
     const said = text.trim();
     if (!said || busy) return;
     setBusy(true);
@@ -53,9 +53,10 @@ export function useAsk() {
       }
       const q = intent.query || said;
       const locate = intent.nearMe && !ctx.origin ? "&locate=1" : "";
-      router.push(`/search?q=${encodeURIComponent(q)}&said=${encodeURIComponent(said)}${locate}`);
+      const go = opts.replace ? router.replace : router.push;
+      go(`/search?q=${encodeURIComponent(q)}&said=${encodeURIComponent(said)}${locate}`);
     } catch {
-      router.push(`/search?q=${encodeURIComponent(said)}`);
+      if (!opts.replace) router.push(`/search?q=${encodeURIComponent(said)}`);
     } finally {
       setBusy(false);
     }

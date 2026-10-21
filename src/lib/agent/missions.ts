@@ -358,6 +358,12 @@ function narrate(v: Omit<MissionView, "narration">): string {
     const replaced = v.calls.filter((c) => c.replaces).length;
     return `دارم به ${formatNumber(pending)} فروشگاه زنگ می‌زنم${replaced ? `؛ ${formatNumber(replaced)} تا جایگزین هم پیدا کردم` : ""}…`;
   }
+  if (v.best && v.status === "bought") return "خرید مبارک! این پیگیری تموم شد؛ قیمتی که گزارش دادی به بقیه‌ی خریدارها هم کمک می‌کنه.";
+  if (v.best && v.status === "visiting") {
+    const b = v.best;
+    const where = [b.shop.mall, b.shop.floor ? `طبقه ${b.shop.floor}` : null, b.shop.unit].filter(Boolean).join("، ");
+    return `در راهی سمت «${b.shop.name}»${where ? `، ${where}` : ""}. رسیدی، قبل از پرداخت چک‌لیست رو ببین.`;
+  }
   if (v.best) {
     const b = v.best;
     const conf = b.confirmation;

@@ -5,6 +5,7 @@ import { use, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Bookmark, BookmarkCheck, ChevronDown, Info, List, Map as MapIcon, PhoneCall, Store, Sparkles } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
+import { NotFoundState } from "@/components/NotFoundState";
 import { CallSetupSheet } from "@/components/CallSetupSheet";
 import { ChatPanel } from "@/components/ChatPanel";
 import { ContextBar } from "@/components/ContextBar";
@@ -53,7 +54,7 @@ export function ProductScreen({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const search = useSearchParams();
   const { ctx, query, patch, reset } = useShopper();
-  const { data, previous, error, loading, reload } = useApi<ProductResponse>(withCtx(`/api/products/${encodeURIComponent(id)}`, query));
+  const { data, previous, error, notFound, loading, reload } = useApi<ProductResponse>(withCtx(`/api/products/${encodeURIComponent(id)}`, query));
   const shown = data ?? (previous?.product.id === decodeURIComponent(id) ? previous : undefined);
   const [sort, setSort] = useState<Sort>("best");
   const [view, setView] = useState<"list" | "map">("list");
@@ -121,9 +122,13 @@ export function ProductScreen({ params }: { params: Promise<{ id: string }> }) {
     return (
       <>
         <AppHeader title="کالا" back />
-        <div className="p-4">
-          <ErrorNote message={error} onRetry={reload} />
-        </div>
+        {notFound ? (
+          <NotFoundState title="این کالا پیدا نشد" />
+        ) : (
+          <div className="p-4">
+            <ErrorNote message={error} onRetry={reload} />
+          </div>
+        )}
       </>
     );
   }
@@ -147,7 +152,7 @@ export function ProductScreen({ params }: { params: Promise<{ id: string }> }) {
   return (
     <>
       <AppHeader
-        title={product.brand ?? product.category}
+        title={product.category}
         back
         action={
           isEnabled("history") && (
@@ -163,7 +168,7 @@ export function ProductScreen({ params }: { params: Promise<{ id: string }> }) {
         }
       />
 
-      <main className="space-y-3 px-4 pb-32">
+      <main className="space-y-3 px-4 pb-40">
         {/* Product */}
         <Card className="p-3">
           {product.images.length > 1 ? (
@@ -370,7 +375,7 @@ export function ProductScreen({ params }: { params: Promise<{ id: string }> }) {
 
       {/* Agent CTA */}
       {isEnabled("agentCalls") && callTargets.length > 0 && (
-        <div className="fixed inset-x-0 bottom-[calc(72px+env(safe-area-inset-bottom))] z-30 mx-auto max-w-[480px] px-4">
+        <div className="fixed inset-x-0 bottom-[calc(92px+env(safe-area-inset-bottom))] z-30 mx-auto max-w-[480px] px-4">
           <button
             onClick={() => setCalling(true)}
             className="rise flex h-14 w-full items-center gap-3 rounded-2xl bg-brand px-4 text-white shadow-[0_10px_24px_-8px_rgba(91,71,224,0.8)] active:bg-brand-ink"
@@ -387,8 +392,8 @@ export function ProductScreen({ params }: { params: Promise<{ id: string }> }) {
                   ? "فروشگاه‌هایی که تیک زدی"
                   : openNow.length
                     ? "بهترین گزینه‌هایی که الان بازن"
-                    : "الان بسته‌ان؛ وقتی باز شدن زنگ می‌زنم"}{" "}
-               ، موجودی و قیمت امروز
+                    : "الان بسته‌ان؛ وقتی باز شدن زنگ می‌زنم"}
+                ؛ موجودی و قیمت امروز
               </span>
             </span>
           </button>

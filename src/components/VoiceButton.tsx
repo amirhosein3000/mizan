@@ -1,6 +1,7 @@
 "use client";
-// Mic button (voice module). Records with MediaRecorder, sends to /api/transcribe,
-// returns Persian text. Hidden when recording isn't supported; text input is the fallback.
+// Mic button (voice module). Prefers the browser's own speech recognition (fa-IR,
+// no server round-trip); otherwise records with MediaRecorder and sends to
+// /api/transcribe. Hidden when neither is supported; text input is the fallback.
 // Callers render it only when isEnabled("voice").
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Mic, Square } from "lucide-react";
@@ -9,14 +10,35 @@ import { Spinner } from "./ui";
 type State = "idle" | "recording" | "working";
 const MAX_MS = 10_000;
 
+interface SpeechRec {
+  lang: string;
+  interimResults: boolean;
+  maxAlternatives: number;
+  start(): void;
+  stop(): void;
+  onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
+  onerror: ((e: { error: string }) => void) | null;
+  onend: (() => void) | null;
+}
+type SpeechRecCtor = new () => SpeechRec;
+
+function speechCtor(): SpeechRecCtor | null {
+  if (typeof window === "undefined") return null;
+  const w = window as unknown as { SpeechRecognition?: SpeechRecCtor; webkitSpeechRecognition?: SpeechRecCtor };
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
+}
+
 const noop = () => () => {};
 function useCanRecord() {
   return useSyncExternalStore(
     noop,
-    () => typeof window !== "undefined" && !!navigator.mediaDevices?.getUserMedia && typeof MediaRecorder !== "undefined",
+    () => typeof window !== "undefined" && (!!speechCtor() || (!!navigator.mediaDevices?.getUserMedia && typeof MediaRecorder !== "undefined")),
     () => false,
   );
 }
+
+/** Set once the browser's recognizer failed for a reason other than silence; then use the server. */
+let browserSpeechBroken = false;
 
 export function VoiceButton({
   onText,
@@ -31,20 +53,61 @@ export function VoiceButton({
   const [state, setState] = useState<State>("idle");
   const [hint, setHint] = useState<string | null>(null);
   const recorder = useRef<MediaRecorder | null>(null);
+  const speech = useRef<SpeechRec | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(
     () => () => {
       if (timer.current) clearTimeout(timer.current);
       recorder.current?.stream.getTracks().forEach((t) => t.stop());
+      speech.current?.stop();
     },
     [],
   );
 
   if (!canRecord) return null;
 
-  async function start() {
+  function start() {
     setHint(null);
+    const Ctor = browserSpeechBroken ? null : speechCtor();
+    if (Ctor) startBrowser(Ctor);
+    else void startRecorder();
+  }
+
+  function startBrowser(Ctor: SpeechRecCtor) {
+    const rec = new Ctor();
+    rec.lang = "fa-IR";
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    rec.onresult = (e) => {
+      const text = e.results[0]?.[0]?.transcript?.trim();
+      if (text) onText(text);
+    };
+    rec.onerror = (e) => {
+      if (e.error === "not-allowed") setHint("اجازه‌ی میکروفون داده نشده؛ تایپ کن.");
+      else if (e.error === "no-speech") setHint("چیزی نشنیدم؛ دوباره بگو.");
+      else {
+        // network / service-not-allowed / language-not-supported: fall back to the server path.
+        browserSpeechBroken = true;
+        void startRecorder();
+      }
+    };
+    rec.onend = () => {
+      speech.current = null;
+      setState((s) => (s === "recording" ? "idle" : s));
+    };
+    speech.current = rec;
+    rec.start();
+    setState("recording");
+    navigator.vibrate?.(30);
+  }
+
+  async function startRecorder() {
+    setHint(null);
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      setHint("ضبط صدا روی این مرورگر نمیشه؛ تایپ کن.");
+      return;
+    }
     let stream: MediaStream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -80,6 +143,7 @@ export function VoiceButton({
   }
 
   function stop() {
+    speech.current?.stop();
     if (timer.current) clearTimeout(timer.current);
     if (recorder.current?.state === "recording") recorder.current.stop();
   }

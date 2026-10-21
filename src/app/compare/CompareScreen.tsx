@@ -95,10 +95,13 @@ export function CompareScreen() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line">
-                  <Row label="قیمت ثبت‌شده" values={items.map((it) => priceRange(it.product))} strong />
+                  <Row label="ارزون‌ترین با شرایط تو" values={items.map((it) => (it.stats.cheapest ? `${formatTomanShort(it.stats.cheapest)} تومان` : "—"))} strong />
+                  <Row label="بازه‌ی قیمت ثبت‌شده در تهران" values={items.map((it) => priceRange(it.product))} />
                   <Row label="فروشگاه‌ها (با فیلترهات)" values={items.map((it) => `${formatNumber(it.stats.shops)} فروشگاه`)} />
-                  <Row label="الان باز" values={items.map((it) => formatNumber(it.stats.openNow))} />
-                  <Row label="نزدیک‌ترین" values={items.map((it) => (it.stats.nearestM !== null ? formatDistance(it.stats.nearestM) : "—"))} />
+                  <Row label="الان باز" values={items.map((it) => (it.stats.openNow ? `${formatNumber(it.stats.openNow)} فروشگاه` : "فعلاً بسته"))} />
+                  {items.some((it) => it.stats.nearestM !== null) && (
+                    <Row label="نزدیک‌ترین" values={items.map((it) => (it.stats.nearestM !== null ? formatDistance(it.stats.nearestM) : "—"))} />
+                  )}
                   <Row label="قسطی" values={items.map((it) => (it.stats.installment ? `${formatNumber(it.stats.installment)} فروشگاه` : "—"))} />
                   {specRows.map((r) => (
                     <Row key={r.k} label={r.k} values={r.values} highlight={r.differ} />

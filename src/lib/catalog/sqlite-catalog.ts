@@ -423,19 +423,26 @@ export class SqliteCatalog implements Catalog {
   }
 
   private featuredCache: Product[] | null = null;
+  /**
+   * Home "popular" cards: products carried by the most DISTINCT shops (some shops list one
+   * product many times), one per category, everyday shopping categories first.
+   */
   featured(limit = 12): Product[] {
     if (!this.featuredCache) {
       const rows = this.db
         .prepare(
-          `SELECT ${PRODUCT_COLS} FROM products p
-           WHERE p.offer_count >= 6 AND p.price_med IS NOT NULL AND p.images != ''
-           ORDER BY p.offer_count DESC LIMIT 600`,
+          `SELECT ${PRODUCT_COLS}, (SELECT COUNT(DISTINCT o.shop_rid) FROM offers o WHERE o.product_rid = p.rid) AS shop_n
+           FROM products p
+           WHERE p.offer_count >= 8 AND p.price_med IS NOT NULL AND p.images != ''
+           ORDER BY shop_n DESC LIMIT 400`,
         )
-        .all() as ProductRow[];
+        .all() as (ProductRow & { shop_n: number })[];
+      const everyday = /گوشی|هدفون|هندزفری|هدست|اسپیکر|شارژر|پاوربانک|ساعت|لپ.?تاپ|تبلت|کنسول|ماوس|کیبورد|هارد|فلش|دوربین عکاسی|^اتو|سشوار|ریش/;
+      const ordered = [...rows.filter((r) => everyday.test(r.category)), ...rows.filter((r) => !everyday.test(r.category))];
       const seen = new Set<string>();
       this.featuredCache = [];
-      for (const r of rows) {
-        if (seen.has(r.category)) continue;
+      for (const r of ordered) {
+        if (seen.has(r.category) || r.shop_n < 5) continue;
         seen.add(r.category);
         this.featuredCache.push(toProduct(r));
       }

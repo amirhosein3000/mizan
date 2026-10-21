@@ -181,7 +181,9 @@ export function XrayScreen() {
           {phase === "scanning" && (
             <div className="pointer-events-none absolute inset-0 bg-[#5b47e0]/15">
               <div className="xray-sweep absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-transparent via-[#8a5cf6]/70 to-transparent" />
-              <div className="absolute inset-x-0 bottom-4 text-center text-sm font-bold">میزان داره قیمت‌ها رو می‌سنجه…</div>
+              <div className="absolute inset-x-0 bottom-4 flex justify-center">
+                <span className="rounded-full bg-black/70 px-4 py-2 text-sm font-bold text-white backdrop-blur">میزان داره قیمت‌ها رو می‌سنجه…</span>
+              </div>
             </div>
           )}
 
@@ -266,7 +268,10 @@ export function XrayScreen() {
 
 function Badge({ item, index, onTap }: { item: XrayItem; index: number; onTap: () => void }) {
   if (!item.bbox) return null;
-  const [x, y, w] = item.bbox;
+  const [x, y, w, h] = item.bbox;
+  // Centre of the product (price tags usually sit under it), kept inside the photo.
+  const top = Math.min(0.9, Math.max(0.1, y + h / 2));
+  const left = Math.min(0.88, Math.max(0.12, x + w / 2));
   const level = item.match?.verdict?.level;
   const style = level ? LEVEL_STYLE[level] : null;
   const median = item.match?.summary?.median;
@@ -274,7 +279,7 @@ function Badge({ item, index, onTap }: { item: XrayItem; index: number; onTap: (
     <button
       onClick={onTap}
       className="pop-in absolute z-10 -translate-x-1/2 -translate-y-1/2"
-      style={{ left: `${(x + w / 2) * 100}%`, top: `${y * 100}%`, animationDelay: `${index * 90}ms` }}
+      style={{ left: `${left * 100}%`, top: `${top * 100}%`, animationDelay: `${index * 90}ms` }}
     >
       <span
         className={`flex flex-col items-center rounded-2xl px-2.5 py-1 shadow-[0_6px_18px_rgba(0,0,0,0.45)] ring-2 ring-white ${

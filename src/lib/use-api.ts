@@ -2,12 +2,13 @@
 // Tiny data hook: GET a JSON API, keep the last good data while refetching,
 // expose Persian error text. `url = null` means "don't fetch yet".
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api, errorMessage } from "./client-api";
+import { api, ApiError, errorMessage } from "./client-api";
 
 interface State<T> {
   url: string | null;
   data?: T;
   error?: string;
+  notFound?: boolean;
 }
 
 export function useApi<T>(url: string | null) {
@@ -20,7 +21,7 @@ export function useApi<T>(url: string | null) {
     api<T>(url, { signal: ctrl.signal }).then(
       (data) => setState({ url, data }),
       (err) => {
-        if ((err as Error)?.name !== "AbortError") setState((s) => ({ url, data: s.data, error: errorMessage(err) }));
+        if ((err as Error)?.name !== "AbortError") setState((s) => ({ url, data: s.data, error: errorMessage(err), notFound: err instanceof ApiError && err.status === 404 }));
       },
     );
     return () => ctrl.abort();
@@ -34,6 +35,8 @@ export function useApi<T>(url: string | null) {
     /** Last data received for any url — show it dimmed while new filters load. */
     previous: state.data,
     error: fresh ? state.error : undefined,
+    /** The resource doesn't exist (HTTP 404): retrying won't help. */
+    notFound: fresh && !!state.notFound,
     loading: !!url && (!fresh || (!state.data && !state.error)),
     reload,
   };

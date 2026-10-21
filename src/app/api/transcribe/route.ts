@@ -13,7 +13,9 @@ export const POST = handle(async (req: Request) => {
   if (!(audio instanceof Blob) || audio.size === 0) return fail(400, "no_audio", "صدایی ضبط نشد. دوباره امتحان کن.");
   if (audio.size > MAX_BYTES) return fail(413, "too_long", "صدا خیلی طولانیه. کوتاه‌تر بگو.");
   const context = (String(form?.get("context") ?? "search") as VoiceContext) || "search";
-  const text = await transcribeAudio(audio, context);
+  // Some providers (e.g. a chat-only gateway) have no speech-to-text endpoint.
+  const text = await transcribeAudio(audio, context).catch(() => null);
+  if (text === null) return fail(503, "stt_unavailable", "تشخیص صدا الان در دسترس نیست؛ لطفاً تایپ کن.");
   if (!text) return fail(422, "empty", "چیزی نشنیدم. یه بار دیگه واضح‌تر بگو.");
   return Response.json({ text });
 });

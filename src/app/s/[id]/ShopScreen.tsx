@@ -7,12 +7,13 @@ import { use, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AtSign, Clock, CreditCard, Globe, Info, PhoneCall, Search, Store, Truck } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
+import { NotFoundState } from "@/components/NotFoundState";
 import { MapView } from "@/components/MapView";
 import { ProductImage } from "@/components/ProductImage";
 import { AddressLine, MapButtons, OpenPill, PaymentBadges, PriceTruth, StockLine, TrafficHint } from "@/components/shop";
 import { Card, ErrorNote, Pill, SectionTitle, Skeleton } from "@/components/ui";
 import type { Offer, Product, Shop } from "@/lib/catalog/types";
-import { formatNumber } from "@/lib/format";
+import { formatNumber, toFaDigits } from "@/lib/format";
 import { priceFreshness } from "@/lib/shop/freshness";
 import { formatDistance, travelEstimate } from "@/lib/shop/geo";
 import { DAY_NAMES, dayLabel, tehranClock, type OpenStatus } from "@/lib/shop/hours";
@@ -35,7 +36,7 @@ export function ShopScreen({ params }: { params: Promise<{ id: string }> }) {
   const { ctx, query } = useShopper();
   const [q, setQ] = useState("");
   const [term, setTerm] = useState("");
-  const { data, previous, error, reload } = useApi<ShopResponse>(
+  const { data, previous, error, notFound, reload } = useApi<ShopResponse>(
     withCtx(`/api/shops/${encodeURIComponent(id)}${term ? `?q=${encodeURIComponent(term)}` : ""}`, query),
   );
   const d = data ?? previous;
@@ -51,9 +52,13 @@ export function ShopScreen({ params }: { params: Promise<{ id: string }> }) {
     return (
       <>
         <AppHeader title="فروشگاه" back />
-        <div className="p-4">
-          <ErrorNote message={error} onRetry={reload} />
-        </div>
+        {notFound ? (
+          <NotFoundState title="این فروشگاه پیدا نشد" />
+        ) : (
+          <div className="p-4">
+            <ErrorNote message={error} onRetry={reload} />
+          </div>
+        )}
       </>
     );
   }
@@ -194,7 +199,7 @@ export function ShopScreen({ params }: { params: Promise<{ id: string }> }) {
                       <div className="mt-0.5">
                         <StockLine c={confirmation} />
                       </div>
-                      {offer.warranty && <div className="text-[11.5px] text-muted">{offer.warranty}</div>}
+                      {offer.warranty && <div className="text-[11.5px] text-muted">{toFaDigits(offer.warranty)}</div>}
                     </div>
                     <PriceTruth
                       compact
