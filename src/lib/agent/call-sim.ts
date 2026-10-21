@@ -119,7 +119,7 @@ export function simulateCall(input: CallInput): CallScript {
   // ---- doesn't pick up ----
   if (status.state === "closed") {
     say("system", "بوق آزاد… کسی جواب نمی‌ده.", 1600);
-    say("system", `طبق ساعت کاری ثبت‌شده الان بسته‌ست (${status.label.replace("بسته • ", "")}).`, 4200);
+    say("system", `طبق ساعت کاری ثبت‌شده الان بسته‌ست (${status.label.replace("بسته؛ ", "")}).`, 4200);
     return { lines, durationMs: t + 600, result: empty("closed", "بسته بود؛ جواب نداد") };
   }
   const pickUp = rand();
@@ -252,6 +252,6 @@ export function simulateCall(input: CallInput): CallScript {
     );
   }
   if (result.holdUntil) parts.push("نگه می‌داره");
-  result.summary = parts.join(" • ");
+  result.summary = parts.join("، ");
   return { lines, durationMs: t + 900, result };
 }

@@ -113,7 +113,7 @@ export function CallSetupSheet({
             </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-[13.5px] font-bold">{s.shop.name}</span>
-              <span className="block truncate text-[11.5px] text-muted">{s.reasons.slice(0, 2).map((r) => r.text).join(" • ")}</span>
+              <span className="block truncate text-[11.5px] text-muted">{s.reasons.slice(0, 2).map((r) => r.text).join("، ")}</span>
             </span>
           </li>
         ))}

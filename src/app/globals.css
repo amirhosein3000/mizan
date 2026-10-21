@@ -205,6 +205,11 @@ body {
   animation-delay: 0.4s;
 }
 
+/* Calmer OSM tiles so our coloured dots stand out. */
+.osm-tiles {
+  filter: saturate(0.55) brightness(1.04);
+}
+
 /* Leaflet sits under our sheets and nav. */
 .leaflet-container {
   font-family: var(--font-vazirmatn), Tahoma, sans-serif;

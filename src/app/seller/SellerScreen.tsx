@@ -1,7 +1,7 @@
 "use client";
 // The other side: a shop owner answers Mizan's questions in two taps and keeps
 // prices fresh. Answers reach the shopper's call screen live.
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BellRing, Check, PhoneIncoming, Search, Store, X } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { ProductImage } from "@/components/ProductImage";
@@ -75,7 +75,7 @@ function ShopList({ shops, onPick }: { shops: Shop[]; onPick: (id: string) => vo
           <Store className="size-5 shrink-0 text-brand" />
           <span className="min-w-0 flex-1">
             <span className="block truncate text-[14px] font-bold">{s.name}</span>
-            <span className="block truncate text-[12px] text-muted">{[s.mall, s.floor ? `طبقه ${s.floor}` : null, s.unit].filter(Boolean).join(" • ") || s.address}</span>
+            <span className="block truncate text-[12px] text-muted">{[s.mall, s.floor ? `طبقه ${s.floor}` : null, s.unit].filter(Boolean).join("، ") || s.address}</span>
           </span>
         </button>
       ))}
@@ -87,6 +87,7 @@ function Inbox({ shopId, onChange }: { shopId: string; onChange: () => void }) {
   const [tab, setTab] = useState<"inbox" | "products">("inbox");
   const { data, error, refresh } = usePoll<InboxResponse>(`/api/seller/inbox?shop=${encodeURIComponent(shopId)}${tab === "products" ? "&products=1" : ""}`, 2000, always);
   const pending = data?.inquiries.filter((i) => !i.answered && i.expiresAt > data.now) ?? [];
+  useRingOnNew(pending.map((i) => i.callId));
   const past = data?.inquiries.filter((i) => i.answered || i.expiresAt <= data.now) ?? [];
 
   return (
@@ -129,7 +130,7 @@ function Inbox({ shopId, onChange }: { shopId: string; onChange: () => void }) {
           <>
             {pending.length === 0 && (
               <EmptyState icon={<PhoneIncoming className="size-6" />} title="فعلاً سؤالی نیست">
-                وقتی خریداری از میزان بخواد به شما زنگ بزنه، اینجا با صدای زنگ ظاهر می‌شه.
+                وقتی خریداری از میزان بخواد به شما زنگ بزنه، اینجا با صدای زنگ و لرزش ظاهر می‌شه.
               </EmptyState>
             )}
             {pending.map((i) => (
@@ -160,6 +161,39 @@ function Inbox({ shopId, onChange }: { shopId: string; onChange: () => void }) {
       </main>
     </>
   );
+}
+
+/** A short double beep + vibration when a new question arrives (the seller already tapped, so audio is allowed). */
+function useRingOnNew(ids: string[]) {
+  const seen = useRef<Set<string> | null>(null);
+  const key = ids.join(",");
+  useEffect(() => {
+    const list = key ? key.split(",") : [];
+    if (!seen.current) {
+      seen.current = new Set(list);
+      return;
+    }
+    const fresh = list.filter((id) => !seen.current!.has(id));
+    list.forEach((id) => seen.current!.add(id));
+    if (!fresh.length) return;
+    try {
+      navigator.vibrate?.([180, 80, 180]);
+      const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const ctx = new Ctx();
+      [0, 0.22].forEach((t) => {
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.frequency.value = 880;
+        g.gain.setValueAtTime(0.15, ctx.currentTime + t);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.18);
+        o.connect(g).connect(ctx.destination);
+        o.start(ctx.currentTime + t);
+        o.stop(ctx.currentTime + t + 0.2);
+      });
+    } catch {
+      /* no audio: the card still pops in */
+    }
+  }, [key]);
 }
 
 function InquiryCard({ shopId, i, now, onDone }: { shopId: string; i: Inquiry; now: number; onDone: () => void }) {

@@ -2,11 +2,14 @@ node_modules
 .next
 .git
 data
-*.db
-*.db-*
+dataset
+**/*.db
+**/*.db-*
+**/*.tmp
 .env
 .env.*
 !.env.example
 coverage
 .claude
 npm-debug.log*
+# The packed catalog (catalog/catalog.db.xz) IS needed by the build.

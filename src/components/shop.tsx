@@ -39,11 +39,11 @@ export function PriceTruth({ x, compact = false }: { x: Pick<RankedShop, "price"
       </div>
       {c?.available ? (
         <div className="text-[11px] font-bold text-good">
-          <Check className="inline size-3" /> {SOURCE_LABEL[c.source]} • {timeAgo(c.at)}
+          <Check className="inline size-3" /> {SOURCE_LABEL[c.source]}، {timeAgo(c.at)}
         </div>
       ) : x.offer?.price && x.offer.changedAt ? (
         <div className={`text-[11px] ${x.freshness === "stale" || x.freshness === "old" ? "font-bold text-fair" : "text-info"}`}>
-          قیمت ثبت‌شده • {ageLabel(x.offer.changedAt)}
+          قیمت ثبت‌شده، {ageLabel(x.offer.changedAt)}
         </div>
       ) : x.offer ? (
         <div className="text-[11px] text-muted">قیمت ثبت نشده</div>
@@ -60,7 +60,7 @@ export function StockLine({ c }: { c: Confirmation | null }) {
     return (
       <span className="inline-flex items-center gap-1 text-[12px] font-bold text-good">
         <Check className="size-3.5" /> موجود
-        {c.holdUntil && c.holdUntil > now ? ` • نگه می‌دارن تا ${hhmmFromTs(c.holdUntil)}` : ""}
+        {c.holdUntil && c.holdUntil > now ? `، نگه می‌دارن تا ${hhmmFromTs(c.holdUntil)}` : ""}
       </span>
     );
   }
@@ -77,14 +77,14 @@ export function hhmmFromTs(ts: number): string {
   return hhmm(min);
 }
 
-/** «پاساژ علاءالدین ۲ • طبقه ۵ • واحد ۵۲۱» — what you need at the door. */
+/** «پاساژ علاءالدین ۲، طبقه ۵، واحد ۵۲۱» — what you need at the door. */
 export function AddressLine({ shop, full = false }: { shop: Shop; full?: boolean }) {
   const parts = [shop.mall, shop.floor ? `طبقه ${shop.floor}` : null, shop.unit].filter(Boolean);
   return (
     <div className="flex items-start gap-1.5 text-[12.5px] leading-5 text-muted">
       <Building2 className="mt-0.5 size-3.5 shrink-0" />
       <span className="min-w-0">
-        {parts.length ? <b className="font-bold text-ink">{parts.join(" • ")}</b> : null}
+        {parts.length ? <b className="font-bold text-ink">{parts.join("، ")}</b> : null}
         {(full || !parts.length) && shop.address ? <span className="block">{shop.address}</span> : null}
       </span>
     </div>
@@ -97,7 +97,7 @@ export function TravelLine({ x }: { x: Pick<RankedShop, "distanceM" | "travel"> 
   return (
     <span className="inline-flex items-center gap-1 text-[12px] text-muted">
       <Icon className="size-3.5" />
-      {formatDistance(x.distanceM)} • {x.travel.label}
+      {formatDistance(x.distanceM)}، {x.travel.label}
     </span>
   );
 }
@@ -214,7 +214,7 @@ export function PaymentBadges({ shop }: { shop: Shop }) {
       {shop.payments.map((p) => (
         <Pill key={p.provider} tone={p.inPerson ? "good" : "muted"}>
           {p.provider}
-          {p.inPerson ? " • حضوری" : " • نوع پذیرش نامشخص"}
+          {p.inPerson ? "، حضوری" : "، نوع پذیرش نامشخص"}
         </Pill>
       ))}
     </div>

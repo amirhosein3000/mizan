@@ -317,7 +317,10 @@ export class SqliteCatalog implements Catalog {
       }))
       .filter((x) => x.cov > 0.5)
       .sort((a, b) => b.cov - a.cov || (b.offer.changedAt ?? 0) - (a.offer.changedAt ?? 0));
-    return list.slice(0, limit).map(({ offer, product }) => ({ offer, product }));
+    // Same product listed twice by one shop: keep the first (most relevant, most recent).
+    const seen = new Set<string>();
+    const unique = list.filter((x) => !seen.has(x.product.id) && !!seen.add(x.product.id));
+    return unique.slice(0, limit).map(({ offer, product }) => ({ offer, product }));
   }
 
   categoryShops(category: string, excludeShopIds: string[], limit = 300): Shop[] {

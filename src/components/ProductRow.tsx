@@ -74,7 +74,7 @@ export function ProductCard({
           <div className="line-clamp-2 text-[14px] font-bold leading-6">{product.title}</div>
           <div className="mt-0.5 truncate text-[11.5px] text-muted">
             {product.category}
-            {product.brand ? ` • ${product.brand}` : ""}
+            {product.brand ? `، ${product.brand}` : ""}
           </div>
           <div className="tabular mt-1 text-[14px] font-extrabold">
             {priceRange(product)}

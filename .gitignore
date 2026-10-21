@@ -50,3 +50,4 @@ next-env.d.ts
 /catalog/*.db
 /catalog/*.db-*
 /catalog/*.tmp
+/catalog/*.xz

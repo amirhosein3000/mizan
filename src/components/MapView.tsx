@@ -52,10 +52,11 @@ export function MapView({
       L.current = leaflet;
       const m = leaflet.map(box.current, { zoomControl: false, attributionControl: true }).setView([35.6955, 51.4155], 15);
       leaflet
-        .tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+        // OpenStreetMap standard tiles: keyless, and reachable from Iranian networks.
+        .tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
           maxZoom: 19,
-          subdomains: "abcd",
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; CARTO',
+          className: "osm-tiles",
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         })
         .addTo(m);
       leaflet.control.zoom({ position: "bottomleft" }).addTo(m);
@@ -119,5 +120,6 @@ export function MapView({
     };
   }, [points, origin, radiusKm]);
 
-  return <div ref={box} className={`w-full overflow-hidden rounded-[var(--radius-card)] bg-surface-2 ${className}`} />;
+  // dir="ltr": Leaflet mis-positions tiles inside an RTL document.
+  return <div ref={box} dir="ltr" className={`w-full overflow-hidden rounded-[var(--radius-card)] bg-surface-2 ${className}`} />;
 }

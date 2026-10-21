@@ -95,7 +95,7 @@ export function answerInquiry(shopId: string, a: SellerAnswer, now = Date.now())
     closesAt: null,
     restockDays: null,
     summary: a.available
-      ? ["موجوده (پاسخ فروشنده)", price ? `${formatTomanShort(price)} تومن` : null, holdUntil ? "نگه می‌داره" : null].filter(Boolean).join(" • ")
+      ? ["موجوده (پاسخ فروشنده)", price ? `${formatTomanShort(price)} تومن` : null, holdUntil ? "نگه می‌داره" : null].filter(Boolean).join("، ")
       : "ناموجود (پاسخ فروشنده)",
   };
   db().prepare(`UPDATE calls SET result = ?, ends_at = ?, recorded = 1 WHERE id = ?`).run(JSON.stringify(result), now, c.id);

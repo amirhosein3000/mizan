@@ -86,7 +86,7 @@ export function MapScreen() {
           <MapView points={points} origin={ctx.origin} radiusKm={ctx.radiusKm ?? 1.5} onSelect={setPicked} className="h-[52dvh]" />
           {d && (
             <span className="absolute right-3 top-3 z-[400] rounded-full bg-surface/95 px-3 py-1 text-[12px] font-bold shadow">
-              {formatNumber(d.shops.length)} فروشگاه • {formatDistance(d.radius)}
+              {formatNumber(d.shops.length)} فروشگاه، {formatDistance(d.radius)}
             </span>
           )}
         </div>
@@ -124,7 +124,7 @@ export function MapScreen() {
               <button key={shop.id} onClick={() => setPicked(shop.id)} className="flex items-center gap-3 rounded-2xl bg-surface p-3 text-start">
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[14px] font-bold">{shop.name}</div>
-                  <div className="truncate text-[12px] text-muted">{[shop.mall, shop.floor ? `طبقه ${shop.floor}` : null, formatDistance(distanceM)].filter(Boolean).join(" • ")}</div>
+                  <div className="truncate text-[12px] text-muted">{[shop.mall, shop.floor ? `طبقه ${shop.floor}` : null, formatDistance(distanceM)].filter(Boolean).join("، ")}</div>
                 </div>
                 <OpenPill status={status} />
               </button>

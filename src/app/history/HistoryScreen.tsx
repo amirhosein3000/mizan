@@ -107,7 +107,7 @@ export function HistoryScreen() {
                       : h.onlineMedian
                         ? `آنلاین ${formatToman(h.onlineMedian)}`
                         : ""}
-                  {" • "}
+                  {"، "}
                   {timeAgo(h.updatedAt)}
                 </div>
               </Link>

@@ -13,7 +13,8 @@ export interface AddressParts {
 }
 
 const MALL_RE = /(پاساژ|مجتمع(?:\s*تجاری)?|مرکز\s*(?:تجاری|خرید)|بازار(?:چه)?|تیمچه|سرای|سرا|برج\s*تجاری|گالری)\s*[^،,]*/;
-const FLOOR_WORDS = "همکف|زیرهمکف|زیر\s*همکف|منفی\s*[\d۰-۹]+|اول|دوم|سوم|چهارم|پنجم|ششم|هفتم|هشتم|نهم|دهم|بالا|پایین|زیرزمین|[\d۰-۹٠-٩]+";
+// Raw string: "\d" in a normal string literal would silently become "d".
+const FLOOR_WORDS = String.raw`همکف|زیرهمکف|زیر\s*همکف|منفی\s*[\d۰-۹]+|اول|دوم|سوم|چهارم|پنجم|ششم|هفتم|هشتم|نهم|دهم|بالا|پایین|زیرزمین|[\d۰-۹٠-٩]+`;
 const FLOOR_RE = new RegExp(`طبقه\\s*(${FLOOR_WORDS})`);
 const UNIT_RE = /(واحد|غرفه|پلاک|مغازه)\s*([\d۰-۹٠-٩]+(?:\s*[/و-]\s*[\d۰-۹٠-٩]+)?)/;
 
@@ -37,7 +38,7 @@ export function parseAddress(address: string): AddressParts {
   return { mall, floor, unit };
 }
 
-/** «طبقه ۶ • واحد ۶۲۲» — empty string when nothing is known. */
+/** «طبقه ۶، واحد ۶۲۲» — empty string when nothing is known. */
 export function floorUnitLabel(p: Pick<AddressParts, "floor" | "unit">): string {
-  return [p.floor ? `طبقه ${p.floor}` : null, p.unit].filter(Boolean).join(" • ");
+  return [p.floor ? `طبقه ${p.floor}` : null, p.unit].filter(Boolean).join("، ");
 }

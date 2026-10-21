@@ -25,8 +25,8 @@ export function MissionRow({ m }: { m: MissionSummary }) {
         <span className="line-clamp-1 text-[14px] font-bold">{m.productTitle}</span>
         <span className="mt-0.5 line-clamp-1 block text-[12px] text-muted">
           {m.bestShop
-            ? `${m.bestShop.name}${m.bestShop.price ? ` • ${formatTomanShort(m.bestShop.price)}` : ""}`
-            : `${formatNumber(m.calls)} تماس • ${timeAgo(m.updatedAt)}`}
+            ? `${m.bestShop.name}${m.bestShop.price ? `، ${formatTomanShort(m.bestShop.price)}` : ""}`
+            : `${formatNumber(m.calls)} تماس، ${timeAgo(m.updatedAt)}`}
         </span>
       </span>
       <Pill tone={st.tone}>{st.label}</Pill>

@@ -13,7 +13,8 @@
     "seed": "tsx scripts/generate-seed.ts",
     "icons": "tsx scripts/generate-icons.ts",
     "smoke:llm": "next build && node scripts/llm-smoke.mjs",
-    "catalog": "tsx scripts/build-catalog.ts"
+    "catalog": "tsx scripts/build-catalog.ts",
+    "catalog:pack": "node scripts/pack-catalog.mjs"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",

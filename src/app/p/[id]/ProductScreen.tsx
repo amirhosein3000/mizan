@@ -72,7 +72,7 @@ export function ProductScreen({ params }: { params: Promise<{ id: string }> }) {
   const verdict = isEnabled("verdict") && storePrice && summary ? computeVerdict(storePrice, summary) : null;
 
   useEffect(() => {
-    if (product) document.title = `${product.title.split("|")[0].trim()} • ${APP_NAME}`;
+    if (product) document.title = `${product.title.split("|")[0].trim()} | ${APP_NAME}`;
   }, [product]);
 
   useEffect(() => {
@@ -209,7 +209,7 @@ export function ProductScreen({ params }: { params: Promise<{ id: string }> }) {
             کجا بخرم؟{" "}
             <span className="text-[12px] font-bold text-muted">
               {formatNumber(shown.stats.shops)} فروشگاه
-              {shown.stats.openNow ? ` • ${formatNumber(shown.stats.openNow)} باز` : ""}
+              {shown.stats.openNow ? `، ${formatNumber(shown.stats.openNow)} باز` : ""}
             </span>
           </SectionTitle>
           <ContextBar />
@@ -388,7 +388,7 @@ export function ProductScreen({ params }: { params: Promise<{ id: string }> }) {
                   : openNow.length
                     ? "بهترین گزینه‌هایی که الان بازن"
                     : "الان بسته‌ان؛ وقتی باز شدن زنگ می‌زنم"}{" "}
-                • موجودی و قیمت امروز
+               ، موجودی و قیمت امروز
               </span>
             </span>
           </button>

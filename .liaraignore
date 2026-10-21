@@ -1,0 +1,17 @@
+# What `liara deploy` does NOT upload. Unlike .gitignore, the packed catalog
+# (catalog/catalog.db.xz, ~73 MB) must be uploaded: the Docker build unpacks it.
+node_modules
+.next
+.git
+.claude
+data
+dataset
+catalog/*.db
+catalog/*.db-*
+catalog/*.tmp
+.env
+.env.*
+!.env.example
+coverage
+tsconfig.tsbuildinfo
+npm-debug.log*

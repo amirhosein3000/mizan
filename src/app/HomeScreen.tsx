@@ -146,7 +146,7 @@ export function HomeScreen() {
       )}
 
       <p className="mt-8 text-center text-[11px] leading-5 text-muted">
-        ساخته‌شده برای هکاتون ترب • داده‌ی ترب از
+        ساخته‌شده برای هکاتون ترب، داده‌ی ترب از
         {stats.data ? ` ${formatNumber(stats.data.stats.shops)} فروشگاه و ${formatNumber(stats.data.stats.products)} کالا` : " فروشگاه‌های تهران"}
         <br />
         قیمت‌ها «ثبت‌شده»‌اند تا وقتی میزان تلفنی تأییدشون نکرده.

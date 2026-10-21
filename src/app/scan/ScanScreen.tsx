@@ -132,7 +132,7 @@ function PhotoTab({ onTypeInstead }: { onTypeInstead: () => void }) {
                 {result.reading && (
                   <p className="mt-1 text-[12px] text-muted">
                     چیزی که خوندم: <span dir="ltr">{result.reading.query}</span>
-                    {result.reading.price ? ` • قیمت روی برچسب: ${formatToman(result.reading.price)}` : ""}
+                    {result.reading.price ? `، قیمت روی برچسب: ${formatToman(result.reading.price)}` : ""}
                   </p>
                 )}
               </div>

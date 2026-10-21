@@ -92,7 +92,7 @@ export function ShopScreen({ params }: { params: Promise<{ id: string }> }) {
           <AddressLine shop={shop} full />
           {d.distanceM !== null && (
             <div className="text-[12.5px] text-muted">
-              از {ctx.origin?.label}: {formatDistance(d.distanceM)} • {travel?.label}
+              از {ctx.origin?.label}: {formatDistance(d.distanceM)}، {travel?.label}
             </div>
           )}
           <MapView points={[{ id: shop.id, lat: shop.lat, lon: shop.lon, label: shop.name, tone: "brand", selected: true }]} origin={ctx.origin} className="h-44" />
@@ -223,7 +223,7 @@ export function ShopScreen({ params }: { params: Promise<{ id: string }> }) {
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-[14px] font-bold">{n.shop.name}</div>
                     <div className="truncate text-[12px] text-muted">
-                      {[n.shop.floor ? `طبقه ${n.shop.floor}` : null, n.shop.unit, `${formatDistance(n.distanceM)} فاصله`].filter(Boolean).join(" • ")}
+                      {[n.shop.floor ? `طبقه ${n.shop.floor}` : null, n.shop.unit, `${formatDistance(n.distanceM)} فاصله`].filter(Boolean).join("، ")}
                     </div>
                   </div>
                   <OpenPill status={n.status} />

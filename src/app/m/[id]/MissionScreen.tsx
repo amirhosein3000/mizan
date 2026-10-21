@@ -110,7 +110,7 @@ export function MissionScreen({ params }: { params: Promise<{ id: string }> }) {
               </span>
             )}
             <div className="mt-1 text-[11.5px] text-muted">
-              {formatNumber(m.calls.length)} تماس • {formatNumber(answered)} جواب داد • {formatNumber(positives.length)} موجود
+              {formatNumber(m.calls.length)} تماس، {formatNumber(answered)} جواب داد، {formatNumber(positives.length)} موجود
             </div>
             {scheduled && (
               <button
@@ -167,7 +167,7 @@ export function MissionScreen({ params }: { params: Promise<{ id: string }> }) {
         {m.skipped.length > 0 && (
           <div className="rounded-2xl bg-surface-2 px-3 py-2.5 text-[12px] leading-6 text-muted">
             <b className="text-ink">زنگ نزدم چون الان بسته‌ان:</b>{" "}
-            {m.skipped.map((s) => `${s.shop.name} (${s.label.replace("بسته • ", "")})`).join("، ")}
+            {m.skipped.map((s) => `${s.shop.name} (${s.label.replace("بسته؛ ", "")})`).join("، ")}
           </div>
         )}
 
@@ -295,7 +295,7 @@ function CallCard({ c, shops, replacedName }: { c: CallView; shops: RankedShop[]
       {ranked && (
         <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
           <TravelLine x={ranked} />
-          <span className="text-[12px] text-muted">{[c.shop.mall, c.shop.floor ? `طبقه ${c.shop.floor}` : null].filter(Boolean).join(" • ")}</span>
+          <span className="text-[12px] text-muted">{[c.shop.mall, c.shop.floor ? `طبقه ${c.shop.floor}` : null].filter(Boolean).join("، ")}</span>
         </div>
       )}
 
@@ -374,7 +374,12 @@ function BestCard({ m, best, busy, act }: { m: MissionView; best: RankedShop; bu
         <div className="rounded-2xl bg-surface-2 p-3">
           <AddressLine shop={best.shop} full />
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-            <OpenPill status={best.status} />
+            {best.status.state === "closed" && c?.available && now - c.at < 2 * 3600_000 ? (
+              // Registered hours say closed, but the shop just answered: trust the fresher fact, show both.
+              <Pill tone="good">همین الان جواب دادن (ساعت ثبت‌شده: بسته)</Pill>
+            ) : (
+              <OpenPill status={best.status} />
+            )}
             <TravelLine x={best} />
           </div>
         </div>

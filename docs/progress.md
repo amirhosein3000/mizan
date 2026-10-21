@@ -2,52 +2,44 @@
 
 Update this file at the end of every session/milestone: what's done, what's next, open issues.
 
-## Status — 2026-10-21
+## Status — 2026-10-21 (challenge published, app rebuilt on the Torob dataset)
 
-### Prompt 0 (kickoff) — DONE
-- Name: **Mizan (میزان)**, "the balance / the right measure": the app weighs the store price against the online market (the green/yellow/red verdict). Renamed from Chooneh on 2026-10-21 at the user's request. Tarazoo (ترازو) was rejected because the user's Wallex hackathon project already uses that name; Arzoon (ارزون) was the other candidate.
-  Other candidates: Nerkhyab (نرخ‌یاب, hard in English) and Ayneh (آینه, too generic).
-- Private repo: https://github.com/amirhosein3000/mizan
-- Next.js 16.4 + Tailwind v4 PWA, RTL Persian, Vazirmatn, theme tokens, bottom nav with a centre X-ray button.
-- Price adapter: `PriceProvider` + `MockPriceProvider` (292 generated products: 73 mobile, 41 laptop, 68 appliance, 110 grocery) + `TorobPriceProvider` stub.
-- LLM adapter: OpenAI-compatible client, MOCK mode, backup provider fallback, Persian error messages.
-- Demo flow works end to end in MOCK mode: photo/barcode/text → product → price range → store price → verdict → negotiation sheet → savings card → alternatives → chat → history.
-- Hero: Price X-ray with live mode, gallery upload and a drawn "sample shelf" fallback (works with no camera).
-- Vision pipeline with confidence + top-3 candidate picker; reads shelf price tags.
-- SQLite history (Drizzle), per-device cookie.
-- Quality gates: `npm run check` green (eslint, tsc, 29 vitest tests, next build).
-- Docs: CLAUDE.md, README, spec-day playbook, pitch draft, Dockerfile, .env.example.
+The challenge turned out to be «دستیار هوشمند خرید حضوری از فروشگاه‌های تهران» with a dataset of shops, products
+and offers. The pre-challenge app (in-store verdict / X-ray on mock data) was rebuilt around the four steps from
+the brief. X-ray, verdict, scan, list and voice stay as the «تو مغازه» tools, rewired to real Tehran prices.
 
-### Verified by hand (in-app browser, 380px)
-Home, text search, product page, verdict (overpriced case), negotiation sheet, savings sheet, chat (mock),
-X-ray sample shelf (phones + groceries, incl. "above printed price"), badge sheet, history. Photo identify was
-checked through the API (high-confidence and picker paths).
+### Done
+- **Data**: `scripts/build-catalog.ts` turns the CSVs into `catalog/catalog.db` (SQLite, FTS5, 180 MB; 73 MB packed).
+  Address parsing (passage / floor / unit), hours normalised to Tehran minutes, payments with in-person vs. unknown
+  channel, price sanity (invalid → null; summaries ignore outliers outside median/3..×3), instagram JSON → URL.
+- **Search**: Persian/Latin synonyms, head-noun + category intent + accessory penalty ranking, facets, price bands.
+- **Step 1**: Persian request parser (budget, ranges, place, near me, installment, open now, warranty, visit time);
+  optional LLM refinement. Clarifying questions, facets, sort, compare (+ Mizan's pick).
+- **Step 2**: ranked shops with reasons, distance/ETA, hours at visit time, freshness, hidden-by-filter counts,
+  category-only "maybe" shops, map (Leaflet + OSM), shop page (hours table, payment truthfulness, neighbours).
+- **Step 3**: missions: parallel simulated calls with live transcripts; auto-replacement (nearest, same passage);
+  schedule for opening time when closed + demo «اجرای نمایشی»; seller panel answers live (ring + vibrate);
+  confirmations shared across shoppers for 3 days.
+- **Step 4**: recommendation card (confirmed price, hold, leave-by, traffic-zone tip, Neshan/Balad/Google, checklist),
+  «دارم میرم» / «دوباره بپرس» / «خریدم» + price report; tracking page.
+- Gates: `npm run check` green (48 tests). Standalone production server smoke-tested (health, search, product, missions).
+- Docs: README, CLAUDE.md, docs/deploy.md (Liara), docs/demo-video.md (5-min script).
 
-### Not verified yet
-- Real camera (live X-ray, photo capture, barcode scanning) on a phone: the in-app browser blocks the camera.
-- Real LLM / vision provider (no key yet).
-- Docker image build: Docker isn't installed on this machine. The standalone server was smoke-tested directly with Node.
+### Verified by hand (in-app browser, 375px)
+Home → example ask → search (intent bubble, facets) → product (location, ranked shops, transparency note) →
+call sheet → live call → no-stock → scheduled follow-up → demo run (2 confirmed, recommendation) → seller panel
+answering a live inquiry → shopper sees confirmed price + hold + leave-by. Map, shop page, X-ray sample shelf.
 
-### Prompt 1 (verify & harden) — DONE
-- Gates green; demo path walked at 380px in the in-app browser (incl. photo identify via injected file: auto-jump and picker paths, barcode with Persian digits, suspicious-cheap and above-printed-price verdicts, tools, demo kit, 404).
-- Live LLM path tested end to end against a fake OpenAI-compatible server (`npm run smoke:llm`): ok, backup-provider fallback, junk JSON, 401, 500, timeout, unreachable → all 200 or friendly Persian 503, never a crash.
-- Fixed: shelf prices returned with Persian digits were dropped; overlays clipped by animated parents (Portal); dev badge covering the nav; empty grocery demo shelf; duplicate alternatives; camera-denied copy on the barcode tab; suspicious-cheap verdict now amber; picker scrolls into view.
-- docs/deploy.md (Liara + Docker + no-Docker fallback), liara.json.
-
-### Prompt 2 (extra modules) — IN PROGRESS
-- Done (code, typecheck and lint pass): flags for all 7 modules in `src/config/features.ts`; `ensureTables()` for module-owned tables;
-  module 1 shopping list (`/list`, `api/list`, `src/modules/shopping-list/`); module 6 voice input (`VoiceButton`, `api/transcribe`,
-  `src/modules/voice/`), wired into search, chat and the list.
-- BUG TO CHECK FIRST: in the running dev server, `/api/list` returned `feature_off` although `shoppingList` is enabled.
-  Probably a stale dev compile of `features.ts`: restart `npm run dev` and retest. If it persists, debug `isEnabled` on the server.
-  (A suspected horizontal overflow on /list was a screenshot artefact: scrollWidth == clientWidth.)
-- Left: 2 receipt/price-tag reader, 3 compare, 4 price history chart (load the dataviz skill first), 5 nearby stores,
-  7 seller view; then add a "Modules" section to CLAUDE.md (flag, files, how to remove) and run `npm run check`.
+### Not verified
+- Docker build (Docker isn't installed on this machine) and the Liara deploy itself (needs the user's `liara login`).
+- Product photos and map tiles from inside Iran (Torob's image CDN is blocked from this dev machine; fallbacks work).
+- Real LLM (no key yet); GPS on a real phone.
 
 ## Next
-- Finish prompt 2 (above).
-- Prompt 3: spec-day dry run.
+- Deploy to Liara (docs/deploy.md): user logs in, then `liara deploy`.
+- Record the demo video (docs/demo-video.md), ideally during shop hours.
+- With an LLM key: set `MOCK_LLM=false` + `LLM_*`; check `/api/understand` and chat.
 
 ## Open issues
-- Live X-ray mode depends on the vision model's latency (~2–6 s per frame expected); the single-photo mode is the safe demo path.
-- `BarcodeDetector` isn't on iOS Safari; the ZXing fallback is used there (not yet tested on a device).
+- Landmark coordinates in `lib/shop/places.ts` are approximate (dataset neighbourhood centroids are exact).
+- Traffic-zone check is a bounding box (labelled «احتمالاً»).

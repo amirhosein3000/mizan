@@ -83,7 +83,7 @@ function mockAnswer(ctx: ProductContext, question: string): string {
     if (!shops.length) return "تو داده‌های ترب فروشگاه حضوری‌ای که این مدل رو ثبت کرده باشه پیدا نکردم. جایگزین‌ها رو ببین یا بذار به فروشگاه‌های هم‌دسته زنگ بزنم.";
     const list = shops
       .slice(0, 3)
-      .map((s) => `• ${s.shop.name}${s.price ? ` — ${formatToman(s.price)}` : ""}${s.distanceM !== null ? ` • ${formatDistance(s.distanceM)}` : ""} • ${s.status.label}\n  ${where(s)}`)
+      .map((s) => `• ${s.shop.name}${s.price ? ` — ${formatToman(s.price)}` : ""}${s.distanceM !== null ? `، ${formatDistance(s.distanceM)}` : ""}، ${s.status.label}\n  ${where(s)}`)
       .join("\n");
     return `بهترین گزینه‌ها برای تو:\n${list}\nبخوای، به همین‌ها زنگ می‌زنم و موجودی و قیمت رو تأیید می‌کنم.`;
   }

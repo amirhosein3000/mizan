@@ -41,7 +41,7 @@ export interface OpenStatus {
   closesIn?: number;
   /** When it opens next (state = closed): days from the given day, and minute. */
   opensAt?: { dayOffset: number; minute: number };
-  /** Short Persian label: «باز • تا ۲۰:۰۰», «بسته • فردا ۱۰:۰۰», «ساعت کاری ثبت نشده». */
+  /** Short Persian label: «باز، تا ۲۰:۰۰», «بسته، فردا ۱۰:۰۰», «ساعت کاری ثبت نشده». */
   label: string;
 }
 
@@ -60,7 +60,7 @@ export function openStatus(hours: WeekHours | null, at: number | Date = Date.now
       state: "open",
       closesAt: shift[1],
       closesIn,
-      label: soon ? `باز • ${toFaDigits(closesIn)} دقیقه دیگه می‌بنده` : `باز • تا ${hhmm(shift[1])}`,
+      label: soon ? `باز؛ ${toFaDigits(closesIn)} دقیقه دیگه می‌بنده` : `باز تا ${hhmm(shift[1])}`,
     };
   }
   // Find the next opening within a week.
@@ -70,7 +70,7 @@ export function openStatus(hours: WeekHours | null, at: number | Date = Date.now
     const next = d.map(([a]) => a).filter((a) => offset > 0 || a > minute).sort((x, y) => x - y)[0];
     if (next !== undefined) {
       const when = offset === 0 ? `امروز ${hhmm(next)}` : offset === 1 ? `فردا ${hhmm(next)}` : `${DAY_NAMES[(day + offset) % 7]} ${hhmm(next)}`;
-      return { state: "closed", opensAt: { dayOffset: offset, minute: next }, label: `بسته • باز میشه ${when}` };
+      return { state: "closed", opensAt: { dayOffset: offset, minute: next }, label: `بسته؛ باز میشه ${when}` };
     }
   }
   return { state: "closed", label: "بسته" };

@@ -164,7 +164,8 @@ export function createMission(deviceId: string, input: NewMission, now = Date.no
   const skipped: Reserve["skipped"] = [];
   for (const c of candidates) {
     const st = openStatus(c.shop.hours, now);
-    if (st.state === "closed") skipped.push({ shopId: c.shop.id, label: st.label });
+    // A seller who is online in the panel can answer even outside registered hours.
+    if (st.state === "closed" && !isSellerOnline(c.shop.id, now)) skipped.push({ shopId: c.shop.id, label: st.label });
     else callable.push(c);
   }
   // Everything closed right now (evening, Friday…): schedule the calls for opening time.
@@ -209,7 +210,8 @@ export function createMission(deviceId: string, input: NewMission, now = Date.no
     const c = candidates.find((x) => x.shop.id === shopId);
     const reason = input.shopIds?.length ? "انتخاب خودت" : c ? whyLine(c) || "گزینه‌ی خوب" : null;
     // A shop picked by hand that is closed now is also called when it opens.
-    const at = scheduleFor.get(shopId) ?? (c && openStatus(c.shop.hours, now).state === "closed" ? nextOpenTs(c.shop, now) : null) ?? now;
+    const closedNow = !!c && openStatus(c.shop.hours, now).state === "closed" && !isSellerOnline(shopId, now);
+    const at = scheduleFor.get(shopId) ?? (closedNow ? nextOpenTs(c.shop, now) : null) ?? now;
     startCall(row, shopId, at, reason);
   }
   return id;
@@ -288,7 +290,7 @@ function advance(m: MissionRow, now: number): void {
     // Closed now -> call when it opens; in a demo run, play that opening-time call right away.
     const demo = !!c.reason?.includes(DEMO_TAG);
     const opensAt = openStatus(pick.hours, now).state === "closed" ? nextOpenTs(pick, now) : null;
-    const label = `جایگزین «${failedShop?.name ?? "فروشگاه"}» که ${why} • ${near}${demo ? ` • ${DEMO_TAG}` : ""}`;
+    const label = `جایگزین «${failedShop?.name ?? "فروشگاه"}» که ${why}، ${near}${demo ? `، ${DEMO_TAG}` : ""}`;
     startCall(m, pick.id, demo ? now : opensAt ?? now, label, c.id, opensAt ?? now);
     total++;
     changed = true;
@@ -539,7 +541,7 @@ export function updateMission(id: string, deviceId: string, a: MissionAction, no
       ends_at: number | null;
     }[];
     if (!rows.length) return false;
-    const upd = db().prepare(`UPDATE calls SET started_at = ?, ends_at = ?, reason = COALESCE(reason, '') || ' • ${DEMO_TAG}' WHERE id = ?`);
+    const upd = db().prepare(`UPDATE calls SET started_at = ?, ends_at = ?, reason = COALESCE(reason, '') || '، ${DEMO_TAG}' WHERE id = ?`);
     rows.forEach((r, i) => upd.run(now + i * 400, now + i * 400 + ((r.ends_at ?? r.started_at) - r.started_at), r.id));
     db().prepare(`UPDATE missions SET updated_at = ? WHERE id = ?`).run(now, id);
   } else if (a.action === "more") {
