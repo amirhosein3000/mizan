@@ -88,3 +88,32 @@ export function activeFilterCount(ctx: ShopperContext): number {
   return [ctx.radiusKm, ctx.installment, ctx.torobPayInPerson, ctx.openOnly, ctx.warranty, ctx.fastDelivery, ctx.budgetMax].filter(Boolean)
     .length;
 }
+
+/** Coerce an untrusted (client-sent) context into a valid one; unknown fields are dropped. */
+export function sanitizeContext(raw: unknown): ShopperContext {
+  const r = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  const num = (v: unknown, min: number, max: number) => (typeof v === "number" && Number.isFinite(v) && v >= min && v <= max ? v : null);
+  const o = (r.origin && typeof r.origin === "object" ? r.origin : null) as Record<string, unknown> | null;
+  const lat = num(o?.lat, 34, 37);
+  const lon = num(o?.lon, 50, 53);
+  const src = o?.source;
+  return {
+    origin:
+      lat !== null && lon !== null
+        ? {
+            lat,
+            lon,
+            label: typeof o?.label === "string" ? o.label.slice(0, 60) : "موقعیت انتخابی",
+            source: src === "gps" || src === "area" || src === "landmark" || src === "map" ? src : "map",
+          }
+        : null,
+    radiusKm: num(r.radiusKm, 0.1, 100),
+    visitAt: num(r.visitAt, 0, Number.MAX_SAFE_INTEGER),
+    installment: r.installment === true,
+    torobPayInPerson: r.torobPayInPerson === true,
+    openOnly: r.openOnly === true,
+    warranty: r.warranty === true,
+    fastDelivery: r.fastDelivery === true,
+    budgetMax: num(r.budgetMax, 1, 1e12),
+  };
+}

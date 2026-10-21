@@ -4,7 +4,7 @@
 import "server-only";
 import type { ProductDetail } from "@/lib/catalog";
 import type { ProductWithStats } from "@/lib/agent/shops-service";
-import { formatToman } from "@/lib/format";
+import { formatNumber, formatToman } from "@/lib/format";
 import { getLLM, type ChatMessage } from "@/lib/llm";
 import { SYSTEM_PROMPT } from "@/lib/persona";
 import { formatDistance } from "@/lib/shop/geo";
@@ -79,14 +79,7 @@ function mockAnswer(ctx: ProductContext, question: string): string {
   const summary = product.price;
   const top = shops[0];
 
-  if (/کجا|نزدیک|فروشگاه|مغازه|آدرس|برم/.test(q)) {
-    if (!shops.length) return "تو داده‌های ترب فروشگاه حضوری‌ای که این مدل رو ثبت کرده باشه پیدا نکردم. جایگزین‌ها رو ببین یا بذار به فروشگاه‌های هم‌دسته زنگ بزنم.";
-    const list = shops
-      .slice(0, 3)
-      .map((s) => `• ${s.shop.name}${s.price ? ` — ${formatToman(s.price)}` : ""}${s.distanceM !== null ? `، ${formatDistance(s.distanceM)}` : ""}، ${s.status.label}\n  ${where(s)}`)
-      .join("\n");
-    return `بهترین گزینه‌ها برای تو:\n${list}\nبخوای، به همین‌ها زنگ می‌زنم و موجودی و قیمت رو تأیید می‌کنم.`;
-  }
+  // Most specific intents first: «قسطی کجا…» is about installments, «جایگزین ارزون‌تر» about alternatives.
   if (/قسط|اقساط|ترب ?پی|اسنپ/.test(q)) {
     const inst = shops.filter((s) => s.shop.installment);
     if (!inst.length) return "هیچ‌کدوم از فروشگاه‌هایی که این کالا رو ثبت کردن، خرید قسطی اعلام نکردن. می‌تونم موقع تماس دوباره بپرسم.";
@@ -95,12 +88,34 @@ function mockAnswer(ctx: ProductContext, question: string): string {
       .map((s) => `• ${s.shop.name}: ${s.shop.payments.map((p) => `${p.provider}${p.inPerson ? " (حضوری)" : ""}`).join("، ")}`)
       .join("\n")}`;
   }
+  if (/جایگزین|بهتر|مقایسه|مشابه|ارزون‌تر|پیشنهاد/.test(q)) {
+    if (!similar.length) return "جایگزین نزدیکی تو داده‌ها پیدا نکردم.";
+    const wantsCheaper = /ارزون|ارزان|کمتر/.test(q);
+    const base = summary?.median ?? Infinity;
+    const list = wantsCheaper
+      ? similar.filter((a) => a.product.price && a.product.price.median < base).sort((a, b) => a.product.price!.median - b.product.price!.median)
+      : similar;
+    if (!list.length) return "هم‌رده‌ی ارزون‌تری تو داده‌ها پیدا نکردم؛ همین مدل رو از ارزون‌ترین فروشگاه بگیر.";
+    const heading = wantsCheaper ? "این‌ها ارزون‌ترن" : "این‌ها هم‌رده‌ن";
+    return `${heading}:\n${list
+      .slice(0, 3)
+      .map((a) => `• ${a.product.title.split("|")[0].trim()}${a.product.price ? ` — حدود ${formatToman(a.product.price.median)}` : ""} (${formatNumber(a.stats.shops)} فروشگاه)`)
+      .join("\n")}`;
+  }
   if (/گارانتی|اصل|تقلب|فیک|رجیستر|همتا|چک کنم|نکته/.test(q)) {
     return `قبل از پرداخت این‌ها رو چک کن:\n• ${CHECKLISTS[product.kind].slice(0, 3).join("\n• ")}`;
   }
   if (/چونه|تخفیف|کم کن|بگم/.test(q) && summary) {
     const v = computeVerdict(storePrice ?? summary.median, summary);
     return `اینو بهش بگو:\n«${negotiationLine(v, summary)}»`;
+  }
+  if (/کجا|نزدیک|فروشگاه|مغازه|آدرس|برم/.test(q)) {
+    if (!shops.length) return "تو داده‌های ترب فروشگاه حضوری‌ای که این مدل رو ثبت کرده باشه پیدا نکردم. جایگزین‌ها رو ببین یا بذار به فروشگاه‌های هم‌دسته زنگ بزنم.";
+    const list = shops
+      .slice(0, 3)
+      .map((s) => `• ${s.shop.name}${s.price ? ` — ${formatToman(s.price)}` : ""}${s.distanceM !== null ? `، ${formatDistance(s.distanceM)}` : ""}، ${s.status.label}\n  ${where(s)}`)
+      .join("\n");
+    return `بهترین گزینه‌ها برای تو:\n${list}\nبخوای، به همین‌ها زنگ می‌زنم و موجودی و قیمت رو تأیید می‌کنم.`;
   }
   if (/قیمت|چند|گرون|ارزون|بخرم|ارزش/.test(q) && summary) {
     const base = `فروشگاه‌های تهران روی ترب از ${formatToman(summary.min)} تا ${formatToman(summary.max)} ثبتش کردن؛ قیمت معمول حدود ${formatToman(summary.median)}ه. این‌ها قیمت ثبت‌شده‌ان، نه تأییدشده.`;
@@ -113,13 +128,6 @@ function mockAnswer(ctx: ProductContext, question: string): string {
   if (/مشخصات|باتری|دوربین|رم|حافظه|صفحه|پردازنده|ظرفیت|وزن|سایز|رنگ/.test(q)) {
     if (!product.specs.length) return "مشخصات فنی این کالا تو داده‌ها ثبت نشده.";
     return `مشخصات ${product.title.split("|")[0].trim()}:\n${product.specs.slice(0, 6).map(([k, v]) => `• ${k}: ${v}`).join("\n")}`;
-  }
-  if (/جایگزین|بهتر|مقایسه|مشابه|ارزون‌تر|پیشنهاد/.test(q)) {
-    if (!similar.length) return "جایگزین نزدیکی تو داده‌ها پیدا نکردم.";
-    return `این‌ها هم‌رده‌ن:\n${similar
-      .slice(0, 3)
-      .map((a) => `• ${a.product.title.split("|")[0].trim()}${a.product.price ? ` — حدود ${formatToman(a.product.price.median)}` : ""} (${a.stats.shops} فروشگاه)`)
-      .join("\n")}`;
   }
   return `می‌تونی بپرسی: «نزدیک‌ترین فروشگاه کجاست؟»، «قسطی کجا می‌فروشن؟»، «چی رو چک کنم؟» یا «جایگزین ارزون‌تر چی داره؟»`;
 }

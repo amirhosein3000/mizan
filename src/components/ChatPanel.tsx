@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
 import { api, errorMessage } from "@/lib/client-api";
 import { ASSISTANT_NAME } from "@/lib/persona";
+import { useShopper, withCtx } from "@/lib/shopper-store";
 import { isEnabled } from "@/config/features";
 import { VoiceButton } from "./VoiceButton";
 
@@ -11,9 +12,10 @@ interface Turn {
   content: string;
 }
 
-const SUGGESTIONS = ["ارزش خرید داره؟", "قبل از خرید چی رو چک کنم؟", "چی بگم تخفیف بده؟", "گزینه‌ی ارزون‌تر داره؟"];
+const SUGGESTIONS = ["نزدیک‌ترین فروشگاه کجاست؟", "قسطی کجا می‌فروشن؟", "قبل از خرید چی رو چک کنم؟", "جایگزین ارزون‌تر داره؟"];
 
 export function ChatPanel({ productId, storePrice }: { productId: string; storePrice?: number | null }) {
+  const { query } = useShopper();
   const [turns, setTurns] = useState<Turn[]>([]);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -33,7 +35,7 @@ export function ChatPanel({ productId, storePrice }: { productId: string; storeP
     setBusy(true);
     setError(null);
     try {
-      const { reply } = await api<{ reply: string }>("/api/chat", { body: { productId, storePrice, messages: next } });
+      const { reply } = await api<{ reply: string }>(withCtx("/api/chat", query), { body: { productId, storePrice, messages: next } });
       setTurns([...next, { role: "assistant", content: reply }]);
     } catch (err) {
       setError(errorMessage(err));

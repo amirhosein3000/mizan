@@ -7,12 +7,12 @@ import "server-only";
 import { getCatalog, type Product, type Shop } from "../catalog";
 import { getSqlite } from "../db";
 import { formatNumber, formatTomanShort } from "../format";
-import type { ShopperContext } from "../shop/context";
+import { DEFAULT_CONTEXT, type ShopperContext } from "../shop/context";
 import { distanceM } from "../shop/geo";
 import { hhmm, openStatus } from "../shop/hours";
-import { whyLine, type RankedShop } from "../shop/rank";
+import { rankShops, whyLine, type RankedShop } from "../shop/rank";
 import { ASK_LABEL, shortTitle, simulateCall, type Ask, type CallResult, type ScriptLine } from "./call-sim";
-import { recordConfirmation } from "./confirmations";
+import { confirmationsFor, recordConfirmation } from "./confirmations";
 import { shopsForProduct } from "./shops-service";
 
 export const PARALLEL_CALLS = 3;
@@ -154,10 +154,12 @@ export interface NewMission {
   shopIds?: string[];
 }
 
-export function createMission(deviceId: string, input: NewMission, now = Date.now()): string | null {
+export type CreateResult = { id: string } | { error: "not_found" | "nothing_to_call" };
+
+export function createMission(deviceId: string, input: NewMission, now = Date.now()): CreateResult {
   const catalog = getCatalog();
   const product = catalog.getProduct(input.productId);
-  if (!product) return null;
+  if (!product) return { error: "not_found" };
   const { ranked, maybe } = shopsForProduct(product.id, product.category, input.context, now);
   const candidates = [...ranked.shops, ...maybe];
   const callable: RankedShop[] = [];
@@ -176,8 +178,10 @@ export function createMission(deviceId: string, input: NewMission, now = Date.no
       if (at && scheduleFor.size < PARALLEL_CALLS) scheduleFor.set(c.shop.id, at);
     }
   }
+  // Shops picked by hand are honoured even if they fail a list filter or sit outside the
+  // shortlist: the shopper chose them on purpose.
   const picked = input.shopIds?.length
-    ? input.shopIds.filter((id) => candidates.some((c) => c.shop.id === id))
+    ? [...new Set(input.shopIds)].filter((id) => !!catalog.getShop(id))
     : scheduleFor.size
       ? [...scheduleFor.keys()]
       : callable.slice(0, PARALLEL_CALLS).map((c) => c.shop.id);
@@ -185,6 +189,7 @@ export function createMission(deviceId: string, input: NewMission, now = Date.no
     queue: callable.map((c) => c.shop.id).filter((id) => !picked.includes(id)).slice(0, 14),
     skipped: input.shopIds?.length || scheduleFor.size ? [] : skipped.filter((s) => candidates.findIndex((c) => c.shop.id === s.shopId) < 6).slice(0, 4),
   };
+  if (!picked.length) return { error: "nothing_to_call" };
   const id = crypto.randomUUID();
   const row: MissionRow = {
     id,
@@ -208,13 +213,14 @@ export function createMission(deviceId: string, input: NewMission, now = Date.no
     .run(row);
   for (const shopId of picked) {
     const c = candidates.find((x) => x.shop.id === shopId);
+    const shop = c?.shop ?? catalog.getShop(shopId)!;
     const reason = input.shopIds?.length ? "انتخاب خودت" : c ? whyLine(c) || "گزینه‌ی خوب" : null;
     // A shop picked by hand that is closed now is also called when it opens.
-    const closedNow = !!c && openStatus(c.shop.hours, now).state === "closed" && !isSellerOnline(shopId, now);
-    const at = scheduleFor.get(shopId) ?? (closedNow ? nextOpenTs(c.shop, now) : null) ?? now;
+    const closedNow = openStatus(shop.hours, now).state === "closed" && !isSellerOnline(shopId, now);
+    const at = scheduleFor.get(shopId) ?? (closedNow ? nextOpenTs(shop, now) : null) ?? now;
     startCall(row, shopId, at, reason);
   }
-  return id;
+  return { id };
 }
 
 function callDone(c: CallRow, now: number): boolean {
@@ -418,18 +424,16 @@ export function getMission(id: string, deviceId: string | null, now = Date.now()
     ];
   });
 
-  // Rank every called shop with what we now know.
-  const { ranked, maybe } = product ? shopsForProduct(product.id, product.category, { ...ctx, openOnly: false, radiusKm: null }, now) : { ranked: { shops: [] }, maybe: [] };
-  const calledIds = new Set(calls.map((c) => c.shop.id));
-  const pool = [...ranked.shops, ...maybe];
-  const shops = pool.filter((s) => calledIds.has(s.shop.id));
-  // Shops without a listing that were called aren't in `maybe` once confirmed elsewhere; add them back.
-  for (const c of calls) {
-    if (!shops.some((s) => s.shop.id === c.shop.id)) {
-      const extra = pool.find((s) => s.shop.id === c.shop.id);
-      if (extra) shops.push(extra);
-    }
-  }
+  // Rank exactly the shops that were called, with what we now know. Only origin and visit time
+  // matter here: a shop that confirmed stock must never vanish because of a list filter.
+  const calledShops = [...new Map(calls.map((c) => [c.shop.id, c.shop])).values()];
+  const offers = new Map(catalog.offersFor(m.product_id).map((o) => [o.shop.id, o.offer]));
+  const conf = confirmationsFor(m.product_id, now);
+  const shops = rankShops(
+    calledShops.map((shop) => ({ shop, offer: offers.get(shop.id) ?? null, confirmation: conf.get(shop.id) ?? null })),
+    { ...DEFAULT_CONTEXT, origin: ctx.origin, visitAt: ctx.visitAt },
+    now,
+  ).shops;
   const positiveIds = new Set(calls.filter((c) => c.state === "done" && c.result?.available).map((c) => c.shop.id));
   const best =
     (m.chosen_shop_id ? shops.find((s) => s.shop.id === m.chosen_shop_id) : null) ??

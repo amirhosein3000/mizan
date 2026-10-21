@@ -3,7 +3,7 @@ import { parseAddress } from "@/lib/shop/address";
 import { ageLabel, priceFreshness } from "@/lib/shop/freshness";
 import { distanceM, inTrafficZone, travelEstimate } from "@/lib/shop/geo";
 import { hhmm, openStatus, tehranClock, type WeekHours } from "@/lib/shop/hours";
-import { contextFromParams, contextToParams, DEFAULT_CONTEXT } from "@/lib/shop/context";
+import { contextFromParams, contextToParams, DEFAULT_CONTEXT, sanitizeContext } from "@/lib/shop/context";
 
 /** 2026-10-21 is a Wednesday. Tehran = UTC+03:30. */
 const tehran = (h: number, m = 0, day = 21) => Date.UTC(2026, 9, day, h, m) - 3.5 * 3600_000;
@@ -110,5 +110,19 @@ describe("shopper context <-> params", () => {
     const p = contextToParams(ctx);
     const back = contextFromParams((k) => p[k] ?? null);
     expect(back).toEqual(ctx);
+  });
+});
+
+describe("sanitizeContext", () => {
+  it("drops malformed client input", () => {
+    const c = sanitizeContext({ origin: { lat: "x", lon: 51.4 }, installment: "yes", budgetMax: -5, radiusKm: 2 });
+    expect(c.origin).toBeNull();
+    expect(c.installment).toBe(false);
+    expect(c.budgetMax).toBeNull();
+    expect(c.radiusKm).toBe(2);
+  });
+  it("keeps a valid context intact", () => {
+    const ctx = { ...DEFAULT_CONTEXT, origin: { lat: 35.7, lon: 51.4, label: "فردوسی", source: "area" as const }, openOnly: true };
+    expect(sanitizeContext(ctx)).toEqual(ctx);
   });
 });
