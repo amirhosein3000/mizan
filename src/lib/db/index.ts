@@ -1,6 +1,7 @@
 // SQLite via better-sqlite3 + Drizzle. Tables are created on first use with
 // CREATE TABLE IF NOT EXISTS (no migration tooling — hackathon-simple).
-// New modules: add their CREATE statements to BOOTSTRAP_SQL and their table to schema.ts.
+// Core tables live in BOOTSTRAP_SQL + schema.ts. Feature modules own their tables:
+// they define them in src/modules/<id>/schema.ts and call ensureTables() before use.
 import "server-only";
 import Database from "better-sqlite3";
 import { drizzle, type BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
@@ -28,7 +29,7 @@ const BOOTSTRAP_SQL = [
 ];
 
 type DB = BetterSQLite3Database<typeof schema>;
-const g = globalThis as unknown as { __choonehDb?: DB };
+const g = globalThis as unknown as { __choonehDb?: DB; __choonehSqlite?: Database.Database; __choonehTables?: Set<string> };
 
 export function getDb(): DB {
   if (g.__choonehDb) return g.__choonehDb;
@@ -38,8 +39,20 @@ export function getDb(): DB {
   const sqlite = new Database(file);
   sqlite.pragma("journal_mode = WAL");
   for (const stmt of BOOTSTRAP_SQL) sqlite.exec(stmt);
+  g.__choonehSqlite = sqlite;
   g.__choonehDb = drizzle(sqlite, { schema });
   return g.__choonehDb;
+}
+
+/** Run a module's CREATE ... IF NOT EXISTS statements once per process. */
+export function ensureTables(key: string, statements: string[]): DB {
+  const db = getDb();
+  g.__choonehTables ??= new Set();
+  if (!g.__choonehTables.has(key)) {
+    for (const stmt of statements) g.__choonehSqlite!.exec(stmt);
+    g.__choonehTables.add(key);
+  }
+  return db;
 }
 
 export { schema };

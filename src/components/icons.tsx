@@ -2,6 +2,13 @@ import {
   AirVent,
   Barcode,
   Camera,
+  ChartLine,
+  ListChecks,
+  MapPin,
+  Mic,
+  ReceiptText,
+  Scale,
+  Store,
   Coffee,
   CookingPot,
   Flame,
@@ -36,6 +43,13 @@ export const FEATURE_ICONS: Record<string, LucideIcon> = {
   sparkles: Sparkles,
   camera: Camera,
   barcode: Barcode,
+  list: ListChecks,
+  receipt: ReceiptText,
+  compare: Scale,
+  chart: ChartLine,
+  map: MapPin,
+  mic: Mic,
+  store: Store,
 };
 
 export const SUBCATEGORY_ICONS: Record<string, LucideIcon> = {

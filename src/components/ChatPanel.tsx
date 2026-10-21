@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
 import { api, errorMessage } from "@/lib/client-api";
 import { ASSISTANT_NAME } from "@/lib/persona";
+import { isEnabled } from "@/config/features";
+import { VoiceButton } from "./VoiceButton";
 
 interface Turn {
   role: "user" | "assistant";
@@ -93,6 +95,7 @@ export function ChatPanel({ productId, storePrice }: { productId: string; storeP
           className="h-10 min-w-0 flex-1 bg-transparent text-[15px] outline-none"
           enterKeyHint="send"
         />
+        {isEnabled("voice") && <VoiceButton context="chat" onText={(t) => send(t)} />}
         <button
           type="submit"
           disabled={!text.trim() || busy}

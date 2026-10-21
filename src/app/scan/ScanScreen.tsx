@@ -8,6 +8,8 @@ import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { CandidatePicker, type Candidate } from "@/components/CandidatePicker";
 import { ProductRow } from "@/components/ProductRow";
 import { Button, ErrorNote, Skeleton } from "@/components/ui";
+import { VoiceButton } from "@/components/VoiceButton";
+import { isEnabled } from "@/config/features";
 import { api, errorMessage } from "@/lib/client-api";
 import { formatToman } from "@/lib/format";
 import { fileToDataUrl } from "@/lib/image";
@@ -278,6 +280,7 @@ function TextTab({ initialQuery }: { initialQuery: string }) {
           enterKeyHint="search"
           type="search"
         />
+        {isEnabled("voice") && <VoiceButton context="search" onText={setQ} className="-me-2" />}
       </label>
       {error && <ErrorNote message={error} />}
       {loading && !results && (

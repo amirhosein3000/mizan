@@ -12,7 +12,15 @@ export type FeatureId =
   | "alternatives"
   | "chat"
   | "history"
-  | "savings";
+  | "savings"
+  // Pre-built optional modules (src/modules/<id>):
+  | "shoppingList"
+  | "receipt"
+  | "compare"
+  | "priceHistory"
+  | "nearby"
+  | "voice"
+  | "seller";
 
 export interface FeatureDef {
   id: FeatureId;
@@ -35,6 +43,14 @@ export const FEATURES: FeatureDef[] = [
   { id: "chat", titleFa: "بپرس از چونه", descriptionFa: "گفتگو درباره‌ی کالا", enabled: true, icon: "chat" },
   { id: "history", titleFa: "ذخیره‌ها", descriptionFa: "تاریخچه و لیست خرید", enabled: true, href: "/history", icon: "history" },
   { id: "savings", titleFa: "کارت صرفه‌جویی", descriptionFa: "صرفه‌جویی‌ات رو به اشتراک بذار", enabled: true, icon: "sparkles" },
+  // ---- optional modules ----
+  { id: "shoppingList", titleFa: "لیست خرید", descriptionFa: "لیست بنویس، توی مغازه تیک بزن و با بودجه بسنج", enabled: true, href: "/list", icon: "list" },
+  { id: "receipt", titleFa: "برچسب و فاکتور", descriptionFa: "از برچسب قیمت یا فاکتور عکس بگیر، ببین کجا گرون خریدی", enabled: true, href: "/receipt", icon: "receipt" },
+  { id: "compare", titleFa: "مقایسه", descriptionFa: "دو سه کالا رو کنار هم بذار", enabled: true, href: "/compare", icon: "compare" },
+  { id: "priceHistory", titleFa: "نمودار قیمت", descriptionFa: "روند ۳ ماه اخیر: الان بخرم یا صبر کنم؟", enabled: true, icon: "chart" },
+  { id: "nearby", titleFa: "مغازه‌های نزدیک", descriptionFa: "کجای همین اطراف ارزون‌تره؟", enabled: true, icon: "map" },
+  { id: "voice", titleFa: "جستجوی صوتی", descriptionFa: "بگو، بنویسم", enabled: true, icon: "mic" },
+  { id: "seller", titleFa: "پنل فروشنده", descriptionFa: "قیمت مغازه‌ت در برابر بازار آنلاین", enabled: true, href: "/seller", icon: "store" },
 ];
 
 function parseList(v: string | undefined): Set<string> {

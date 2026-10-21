@@ -34,8 +34,18 @@ checked through the API (high-confidence and picker paths).
 - Fixed: shelf prices returned with Persian digits were dropped; overlays clipped by animated parents (Portal); dev badge covering the nav; empty grocery demo shelf; duplicate alternatives; camera-denied copy on the barcode tab; suspicious-cheap verdict now amber; picker scrolls into view.
 - docs/deploy.md (Liara + Docker + no-Docker fallback), liara.json.
 
+### Prompt 2 (extra modules) — IN PROGRESS
+- Done (code, typecheck and lint pass): flags for all 7 modules in `src/config/features.ts`; `ensureTables()` for module-owned tables;
+  module 1 shopping list (`/list`, `api/list`, `src/modules/shopping-list/`); module 6 voice input (`VoiceButton`, `api/transcribe`,
+  `src/modules/voice/`), wired into search, chat and the list.
+- BUG TO CHECK FIRST: in the running dev server, `/api/list` returned `feature_off` although `shoppingList` is enabled.
+  Probably a stale dev compile of `features.ts`: restart `npm run dev` and retest. If it persists, debug `isEnabled` on the server.
+  (A suspected horizontal overflow on /list was a screenshot artefact: scrollWidth == clientWidth.)
+- Left: 2 receipt/price-tag reader, 3 compare, 4 price history chart (load the dataviz skill first), 5 nearby stores,
+  7 seller view; then add a "Modules" section to CLAUDE.md (flag, files, how to remove) and run `npm run check`.
+
 ## Next
-- Prompt 2: extra modules behind flags.
+- Finish prompt 2 (above).
 - Prompt 3: spec-day dry run.
 
 ## Open issues
