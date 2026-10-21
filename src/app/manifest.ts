@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "میزان — دستیار خرید حضوری",
     short_name: "میزان",
-    description: "قیمت مغازه رو با قیمت آنلاین مقایسه کن، اشعه‌ی ایکس قیمت بگیر و با خیال راحت چونه بزن.",
+    description: "فروشگاه‌های نزدیک رو پیدا کن، قیمت‌ها رو مقایسه کن و بذار میزان برات زنگ بزنه و موجودی رو بپرسه.",
     id: "/",
     start_url: "/",
     scope: "/",

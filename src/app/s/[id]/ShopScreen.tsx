@@ -147,7 +147,6 @@ export function ShopScreen({ params }: { params: Promise<{ id: string }> }) {
             <Pill tone={shop.fastDelivery ? "good" : "muted"}>
               <Truck className="size-3.5" /> ارسال فوری: {shop.fastDelivery === null ? "نامشخص" : shop.fastDelivery ? "دارد" : "ندارد"}
             </Pill>
-            <Pill tone="muted">کالابرگ: ثبت نشده</Pill>
           </div>
           <p className="text-[11.5px] leading-5 text-muted">این‌ها چیزیه که فروشنده اعلام کرده؛ «حضوری» یعنی گفته تو مغازه هم قبول می‌کنه.</p>
         </Card>

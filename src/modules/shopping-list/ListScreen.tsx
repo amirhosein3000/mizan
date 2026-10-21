@@ -89,7 +89,7 @@ export function ListScreen() {
           </div>
           {totals.overpay > 0 && (
             <p className="mt-2 rounded-xl bg-fair-soft px-3 py-2 text-[12px] font-semibold text-fair">
-              این خریدها آنلاین حدود {formatToman(totals.overpay)} ارزون‌تر درمیاد.
+              این خریدها جای دیگه‌ی تهران حدود {formatToman(totals.overpay)} ارزون‌تر درمیاد.
             </p>
           )}
         </Card>
@@ -105,7 +105,7 @@ export function ListScreen() {
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="مثلاً: شیر کاله، چای گلستان، ماکارونی"
+            placeholder="مثلاً: شارژر اپل، کابل تایپ سی، گلس"
             className="h-10 min-w-0 flex-1 bg-transparent text-[15px] outline-none"
             enterKeyHint="done"
           />
@@ -151,10 +151,10 @@ export function ListScreen() {
                     <div className={`text-[15px] font-bold ${item.done ? "line-through" : ""}`}>{item.text}</div>
                     {item.productId ? (
                       <Link href={`/p/${encodeURIComponent(item.productId)}`} className="mt-0.5 block truncate text-[11px] text-muted">
-                        {item.productName}، آنلاین حدود {formatTomanShort(item.onlineMedian ?? 0)}
+                        {item.productName}، معمول تهران حدود {formatTomanShort(item.onlineMedian ?? 0)}
                       </Link>
                     ) : (
-                      <div className="mt-0.5 text-[11px] text-muted">قیمت آنلاینش رو پیدا نکردم</div>
+                      <div className="mt-0.5 text-[11px] text-muted">قیمتش رو تو فروشگاه‌های تهران پیدا نکردم</div>
                     )}
                   </div>
                   <button onClick={() => remove(`id=${item.id}`)} className="grid size-8 shrink-0 place-items-center text-muted" aria-label="حذف">
@@ -171,7 +171,7 @@ export function ListScreen() {
                   />
                   {gap !== null &&
                     (gap > (item.onlineMedian ?? 0) * 0.02 ? (
-                      <span className="text-[11px] font-bold text-high">آنلاین {formatTomanShort(gap)} ارزون‌تره</span>
+                      <span className="text-[11px] font-bold text-high">جای دیگه {formatTomanShort(gap)} ارزون‌تره</span>
                     ) : (
                       <span className="text-[11px] font-bold text-good">قیمت خوبه 👍</span>
                     ))}

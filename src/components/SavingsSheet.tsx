@@ -163,7 +163,7 @@ export function SavingsSheet({
             </div>
             <p className="mt-3 text-[13px] leading-6 text-muted">
               {s.vsAsk > 0 && <>با چونه زدن {formatToman(s.vsAsk)} از قیمت اول فروشنده کم شد. </>}
-              {s.vsMarket > 0 && <>{formatToman(s.vsMarket)} زیر قیمت معمول آنلاین خریدی.</>}
+              {s.vsMarket > 0 && <>{formatToman(s.vsMarket)} زیر قیمت معمول تهران خریدی.</>}
               {s.best === 0 && "این بار صرفه‌جویی نشد، ولی دست‌کم با چشم باز خریدی."}
             </p>
             {s.best > 0 && (

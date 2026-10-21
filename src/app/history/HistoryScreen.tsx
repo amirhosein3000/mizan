@@ -105,7 +105,7 @@ export function HistoryScreen() {
                     : h.storePrice
                       ? `مغازه ${formatToman(h.storePrice)}`
                       : h.onlineMedian
-                        ? `آنلاین ${formatToman(h.onlineMedian)}`
+                        ? `معمول تهران ${formatToman(h.onlineMedian)}`
                         : ""}
                   {"، "}
                   {timeAgo(h.updatedAt)}
