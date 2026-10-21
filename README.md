@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Chooneh (چونه)
 
-## Getting Started
+> **چونه** دستیار هوشمند خرید حضوریه: توی مغازه از کالا عکس بگیر، بارکدش رو اسکن کن یا اسمش رو بنویس؛
+> چونه قیمت آنلاینش رو نشونت میده، میگه قیمت مغازه خوبه، منصفانه‌ست یا گرون، یه جمله‌ی آماده برای چونه زدن
+> بهت میده و گزینه‌های ارزون‌تر رو پیشنهاد می‌کنه. با «اشعه‌ی ایکس قیمت» دوربین رو بگیر سمت قفسه و کنار
+> هر کالا یه برچسب سبز، زرد یا قرمز ببین. ساخته‌شده برای هکاتون ترب.
 
-First, run the development server:
+**Chooneh** is a smart assistant for in-person shopping, built for the Torob hackathon challenge
+«دستیار هوشمند برای خرید حضوری». Mobile-first, Persian/RTL, installable PWA.
+
+## What it does
+
+- **Identify** a product by photo (vision model), barcode (in-browser scanner) or name (Persian/English fuzzy search)
+- **Online price picture**: cheapest / typical / most expensive across sellers
+- **Verdict** on the in-store price (good / fair / overpriced), target price, and a **negotiation line** to show the seller
+- **Price X-ray** (hero): point the camera at a shelf; every recognised product gets a colour badge
+- Pre-purchase **checklist**, cheaper **alternatives**, product **chat** in Persian, **history**, shareable **savings card**
+
+## Run locally
+
+Requires Node 22+.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev            # http://localhost:3000 — runs fully in MOCK mode, no keys needed
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+To use a real LLM, copy `.env.example` to `.env.local`, set `MOCK_LLM=false` and the `LLM_*` variables
+(any OpenAI-compatible endpoint; the vision model must accept images).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Camera features need HTTPS on phones (localhost is fine on the same machine). Without a camera, use
+**X-ray → «قفسه‌ی نمونه»** (sample shelf) or **Tools → کیت دمو** (printable barcodes).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Quality gates
 
-## Learn More
+```bash
+npm run check          # eslint + tsc + vitest + next build
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Deploy
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Docker image (Next.js standalone). Mount a persistent volume at `/app/data` for the SQLite file.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+docker build -t chooneh .
+docker run -p 3000:3000 -v chooneh-data:/app/data --env-file .env chooneh
+```
 
-## Deploy on Vercel
+Liara steps: see [docs/deploy.md](docs/deploy.md).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Project docs
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [CLAUDE.md](CLAUDE.md) — architecture, conventions, how to add a module (for developers and Claude Code)
+- [docs/progress.md](docs/progress.md) — status, next steps, open issues
+- [docs/spec-day.md](docs/spec-day.md) — playbook for when the official spec is published
+- [docs/pitch.md](docs/pitch.md) — pitch outline
+
+## Data notice
+
+All prices, sellers, offers and barcodes in `src/data/mock/products.json` are **generated mock data** for the
+demo. Brand names are used only to make the demo realistic. The `TorobPriceProvider` is a stub for whatever
+data the sponsor provides; nothing is scraped.
