@@ -12,6 +12,7 @@ import { distanceM } from "../shop/geo";
 import { hhmm, openStatus } from "../shop/hours";
 import { rankShops, whyLine, type RankedShop } from "../shop/rank";
 import { ASK_LABEL, shortTitle, simulateCall, type Ask, type CallResult, type ScriptLine } from "./call-sim";
+import { answerShopQuestion } from "../ai/shop-answer";
 import { confirmationsFor, recordConfirmation } from "./confirmations";
 import { shopsForProduct } from "./shops-service";
 
@@ -32,6 +33,7 @@ interface MissionRow {
   context: string;
   asks: string;
   question: string | null;
+  question_answer: string | null;
   reserve: string;
   status: MissionStatus;
   chosen_shop_id: string | null;
@@ -134,6 +136,7 @@ function startCall(m: MissionRow, shopId: string, now: number, reason: string | 
     offer,
     asks: JSON.parse(m.asks) as Ask[],
     question: m.question,
+    questionAnswer: m.question_answer,
     at: simAt,
     visitAt: ctx.visitAt,
   });
@@ -156,7 +159,7 @@ export interface NewMission {
 
 export type CreateResult = { id: string } | { error: "not_found" | "nothing_to_call" };
 
-export function createMission(deviceId: string, input: NewMission, now = Date.now()): CreateResult {
+export async function createMission(deviceId: string, input: NewMission, now = Date.now()): Promise<CreateResult> {
   const catalog = getCatalog();
   const product = catalog.getProduct(input.productId);
   if (!product) return { error: "not_found" };
@@ -190,6 +193,8 @@ export function createMission(deviceId: string, input: NewMission, now = Date.no
     skipped: input.shopIds?.length || scheduleFor.size ? [] : skipped.filter((s) => candidates.findIndex((c) => c.shop.id === s.shopId) < 6).slice(0, 4),
   };
   if (!picked.length) return { error: "nothing_to_call" };
+  const question = input.question?.trim() || null;
+  const questionAnswer = question ? await answerShopQuestion(product, question) : null;
   const id = crypto.randomUUID();
   const row: MissionRow = {
     id,
@@ -198,7 +203,8 @@ export function createMission(deviceId: string, input: NewMission, now = Date.no
     product_title: product.title,
     context: JSON.stringify(input.context),
     asks: JSON.stringify(input.asks),
-    question: input.question?.trim() || null,
+    question,
+    question_answer: questionAnswer,
     reserve: JSON.stringify(reserve),
     status: "calling",
     chosen_shop_id: null,
@@ -207,8 +213,8 @@ export function createMission(deviceId: string, input: NewMission, now = Date.no
   };
   db()
     .prepare(
-      `INSERT INTO missions (id, device_id, product_id, product_title, context, asks, question, reserve, status, chosen_shop_id, created_at, updated_at)
-       VALUES (@id,@device_id,@product_id,@product_title,@context,@asks,@question,@reserve,@status,@chosen_shop_id,@created_at,@updated_at)`,
+      `INSERT INTO missions (id, device_id, product_id, product_title, context, asks, question, question_answer, reserve, status, chosen_shop_id, created_at, updated_at)
+       VALUES (@id,@device_id,@product_id,@product_title,@context,@asks,@question,@question_answer,@reserve,@status,@chosen_shop_id,@created_at,@updated_at)`,
     )
     .run(row);
   for (const shopId of picked) {

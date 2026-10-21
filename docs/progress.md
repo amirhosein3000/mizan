@@ -33,18 +33,20 @@ answering a live inquiry → shopper sees confirmed price + hold + leave-by. Map
 ### Not verified
 - Docker build (Docker isn't installed on this machine) and the Liara deploy itself (needs the user's `liara login`).
 - Product photos and map tiles from inside Iran (Torob's image CDN is blocked from this dev machine; fallbacks work).
-- Real LLM (no key yet); GPS on a real phone.
+- GPS on a real phone; Docker build.
 
-### LLM integration (BoxAPI) — DONE 2026-10-21
-- `.env.local` (gitignored) points at https://ai.boxapi.ir/ai/v1, model `gpt-5.4-mini` (text + vision). Verified live: /api/chat, /api/identify, /api/xray (reads brand/model/price from a photo, matches, verdict).
-- Client fix: GPT-5-family models reject `max_tokens` and non-default `temperature` -> now sends `max_completion_tokens` and retries without any parameter the provider rejects.
-- BoxAPI has no /audio/transcriptions, so voice input won't work live. `gpt-6-*` models only accept default temperature (handled by retry) and are slower.
-- On this machine a local proxy (127.0.0.1:10808) breaks curl to boxapi; Node fetch is fine.
+### LLM integration (BoxAPI, gpt-5.4-mini) — DONE & verified live on the new app
+- `.env.local` (gitignored): https://ai.boxapi.ir/ai/v1, `gpt-5.4-mini` for text + vision. Client sends `max_completion_tokens`
+  and retries without parameters the provider rejects (from branch claude/api-token-integration-6d5e78, cherry-picked).
+- Verified live: `/api/understand` (source "llm", ~3 s, 6 s budget then rules), `/api/chat` (grounded: shop, distance,
+  confirmed price, address; light Markdown rendered), X-ray vision on the sample shelf (5 s), and the shopkeeper's answer to the
+  shopper's own call question, generated once per mission from the product specs (no-key fallback: spec lookup).
+- BoxAPI has no /audio/transcriptions: voice input stays mock. On this machine a local proxy breaks curl to boxapi; Node fetch is fine.
 
 ## Next
-- Deploy to Liara (docs/deploy.md): user logs in, then `liara deploy`.
+- Deploy to Liara (docs/deploy.md): the saved Liara login is expired → user runs `liara login`, creates app `mizan` + disk `data`,
+  sets env vars (MOCK_LLM=false, LLM_BASE_URL, LLM_API_KEY, LLM_MODEL, VISION_MODEL, LLM_TIMEOUT_MS) in the console; then `liara deploy`.
 - Record the demo video (docs/demo-video.md), ideally during shop hours.
-- With an LLM key: set `MOCK_LLM=false` + `LLM_*`; check `/api/understand` and chat.
 
 ## Open issues
 - Landmark coordinates in `lib/shop/places.ts` are approximate (dataset neighbourhood centroids are exact).

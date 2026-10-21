@@ -75,6 +75,8 @@ const BOOTSTRAP_SQL = [
   `CREATE TABLE IF NOT EXISTS seller_presence (shop_id TEXT PRIMARY KEY, last_seen INTEGER NOT NULL)`,
 ];
 
+const ADDED_COLUMNS = [`ALTER TABLE missions ADD COLUMN question_answer TEXT`];
+
 type DB = BetterSQLite3Database<typeof schema>;
 const g = globalThis as unknown as { __mizanDb?: DB; __mizanSqlite?: Database.Database; __mizanTables?: Set<string> };
 
@@ -86,6 +88,14 @@ export function getDb(): DB {
   const sqlite = new Database(file);
   sqlite.pragma("journal_mode = WAL");
   for (const stmt of BOOTSTRAP_SQL) sqlite.exec(stmt);
+  // Columns added after a table first shipped (CREATE IF NOT EXISTS won't add them to old files).
+  for (const stmt of ADDED_COLUMNS) {
+    try {
+      sqlite.exec(stmt);
+    } catch {
+      /* already there */
+    }
+  }
   g.__mizanSqlite = sqlite;
   g.__mizanDb = drizzle(sqlite, { schema });
   return g.__mizanDb;

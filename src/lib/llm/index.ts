@@ -63,5 +63,17 @@ export function parseJsonReply<T>(reply: string): T {
   }
 }
 
+/**
+ * Give an interactive LLM call a tight budget: reject with a timeout LLMError after `ms`,
+ * so callers can fall back to their rule-based answer instead of making the shopper wait.
+ */
+export function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new LLMError("timeout", `no reply in ${ms} ms`)), ms);
+  });
+  return Promise.race([p, timeout]).finally(() => clearTimeout(timer));
+}
+
 export { LLMError } from "./types";
 export type { ChatMessage, LLMClient } from "./types";

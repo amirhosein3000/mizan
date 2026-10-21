@@ -26,7 +26,7 @@ export const POST = handle(async (req: Request) => {
     shopIds?: string[];
   }>(req);
   if (!body?.productId) return fail(400, "bad_request", "کالا مشخص نیست.");
-  const res = createMission(await getDeviceId(), {
+  const res = await createMission(await getDeviceId(), {
     productId: body.productId,
     context: sanitizeContext(body.context),
     asks: (body.asks ?? []).filter((a): a is Ask => ASKS.includes(a as Ask)),

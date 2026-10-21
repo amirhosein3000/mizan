@@ -162,3 +162,23 @@ describe("call simulation", () => {
     }
   });
 });
+
+describe("shopkeeper answer from specs (no-key fallback)", () => {
+  const specs: [string, string][] = [
+    ["رنگ", "آبی, سفید, صورتی, مشکی"],
+    ["نوع اتصال", "بی سیم"],
+    ["نسخه بلوتوث", "5.3"],
+  ];
+  it("confirms a value the specs contain", async () => {
+    const { specAnswer } = await import("@/lib/ai/shop-answer");
+    expect(specAnswer("رنگ مشکی دارید؟", specs)).toContain("مشکی");
+  });
+  it("answers a spec key", async () => {
+    const { specAnswer } = await import("@/lib/ai/shop-answer");
+    expect(specAnswer("بلوتوث چنده؟", specs)).toContain("5.3");
+  });
+  it("stays silent when the specs don't say", async () => {
+    const { specAnswer } = await import("@/lib/ai/shop-answer");
+    expect(specAnswer("ارسال رایگان دارید؟", specs)).toBeNull();
+  });
+});

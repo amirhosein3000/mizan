@@ -57,6 +57,8 @@ export interface CallInput {
   offer: Offer | null;
   asks: Ask[];
   question?: string | null;
+  /** The shopkeeper's answer to `question`, prepared once per mission (grounded in specs). */
+  questionAnswer?: string | null;
   /** Call start, epoch ms. */
   at: number;
   /** When the shopper plans to arrive (for the hold request). */
@@ -235,7 +237,7 @@ export function simulateCall(input: CallInput): CallScript {
 
   if (input.question?.trim()) {
     say("agent", input.question.trim());
-    say("shop", rand() < 0.6 ? "بله، حتماً." : "باید ببینم؛ حضوری که اومدن هماهنگ می‌کنیم.");
+    say("shop", input.questionAnswer?.trim() || (rand() < 0.6 ? "بله، حتماً." : "باید ببینم؛ حضوری که اومدن هماهنگ می‌کنیم."));
   }
 
   say("agent", "خیلی ممنون، روزتون خوش.");

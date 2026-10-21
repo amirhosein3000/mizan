@@ -68,7 +68,7 @@ export function ChatPanel({ productId, storePrice }: { productId: string; storeP
           }`}
         >
           {t.role === "assistant" && <div className="mb-0.5 text-[11px] font-bold text-brand">{ASSISTANT_NAME}</div>}
-          {t.content}
+          {t.role === "assistant" ? <RichText text={t.content} /> : t.content}
         </div>
       ))}
       {busy && (
@@ -109,5 +109,23 @@ export function ChatPanel({ productId, storePrice }: { productId: string; storeP
         </button>
       </form>
     </div>
+  );
+}
+
+/**
+ * Model replies may contain light Markdown. Render **bold**, turn "- " / "* " bullets into «•»,
+ * and drop headings / code marks, so no raw asterisks reach the shopper.
+ */
+function RichText({ text }: { text: string }) {
+  const clean = text
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/^#{1,6}\s*/gm, "")
+    .replace(/^\s*[-*]\s+/gm, "• ")
+    .replace(/`/g, "");
+  const parts = clean.split(/\*\*(.+?)\*\*/g);
+  return (
+    <>
+      {parts.map((p, i) => (i % 2 ? <b key={i} className="font-extrabold">{p}</b> : <span key={i}>{p.replace(/\*/g, "")}</span>))}
+    </>
   );
 }

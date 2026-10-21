@@ -3,7 +3,10 @@
 // rules miss (typos, slang, unusual phrasing) and keep rules as the fallback.
 import "server-only";
 import { parseIntent, type Intent } from "@/lib/agent/intent";
-import { getLLM, parseJsonReply } from "@/lib/llm";
+import { getLLM, parseJsonReply, withTimeout } from "@/lib/llm";
+
+/** The shopper is waiting on this one: past this, the rule-based parse is good enough. */
+const BUDGET_MS = 6_000;
 import { findLandmark } from "@/lib/shop/places";
 
 const PROMPT = `You turn a Persian shopping request from a shopper in Tehran into JSON.
@@ -19,12 +22,15 @@ export async function understand(text: string): Promise<Intent & { source: "rule
   const llm = getLLM();
   if (llm.mode === "mock") return { ...rules, source: "rules" };
   try {
-    const reply = await llm.chat(
-      [
-        { role: "system", content: PROMPT },
-        { role: "user", content: text },
-      ],
-      { json: true, temperature: 0, maxTokens: 300 },
+    const reply = await withTimeout(
+      llm.chat(
+        [
+          { role: "system", content: PROMPT },
+          { role: "user", content: text },
+        ],
+        { json: true, temperature: 0, maxTokens: 300 },
+      ),
+      BUDGET_MS,
     );
     const j = parseJsonReply<Partial<Record<keyof Intent, unknown>> & { place?: string | null }>(reply);
     const num = (v: unknown) => (typeof v === "number" && v > 0 ? Math.round(v) : null);
