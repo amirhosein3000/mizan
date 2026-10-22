@@ -53,3 +53,6 @@ next-env.d.ts
 /catalog/*.xz
 # local secrets
 /Api token*.txt
+
+# prebuilt Liara bundle (scripts/prebuilt-bundle.sh)
+deploy-bundle/

@@ -2,6 +2,13 @@
 
 Update this file at the end of every session/milestone: what's done, what's next, open issues.
 
+## Deployed — 2026-10-22: https://mizan.liara.run
+
+Liara team «لیارا», app `mizan` (medium-g2, basic bundle), disk `data`, LLM env vars set from `.env.local`.
+Verified live: all pages 200, `/api/health` → `llm: live`, `/api/understand` (LLM) parses «هدفون انکر زیر ۵ میلیون
+قسطی», a mission starts 3 calls (user DB on the disk). Route: `scripts/prebuilt-bundle.sh` in WSL → copy-only
+image (see docs/deploy.md for why the server-side build didn't fit the 5-minute cap).
+
 ## Hero moments — 2026-10-22
 
 - **پاساژنما** (`components/MallView.tsx`, `lib/shop/mall.ts`): on the product page, passages holding ≥3 of the

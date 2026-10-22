@@ -4,6 +4,8 @@ node_modules
 data
 dataset
 **/*.db
+!catalog/catalog.db
+catalog/*.xz
 **/*.db-*
 **/*.tmp
 .env
@@ -12,7 +14,7 @@ dataset
 coverage
 .claude
 npm-debug.log*
-# The packed catalog (catalog/catalog.db.xz) IS needed by the build.
+# The catalog (catalog/catalog.db) IS needed: the final image copies it.
 # local secrets (never upload)
 Api token*.txt
 *token*.txt

@@ -1,5 +1,31 @@
 # Deploy
 
+**Live:** https://mizan.liara.run (Liara, team «لیارا», app `mizan`, plan medium-g2 + basic bundle,
+disk `data` → `/app/data`, network `mizan-net`). Deployed 2026-10-22 with the prebuilt bundle (route A below).
+
+## Route A (what works on Liara): prebuilt bundle, copy-only image
+
+The basic feature bundle caps the image build at **5 minutes**, and Liara's builder is slow at writing layers
+(npm install + next build + copies didn't fit). So build on Linux locally (WSL is fine) and ship a copy-only image:
+
+```bash
+# in WSL / Linux, from a copy of the repo with catalog/catalog.db present
+bash scripts/prebuilt-bundle.sh          # npm ci + next build + deploy-bundle/{Dockerfile,app.tar}
+liara deploy --path deploy-bundle -a mizan --platform docker -p 3000 -d data:/app/data
+```
+
+Gotchas found on the way:
+- `liara deploy` always skips folders named `node_modules` and `.next` **at any depth**, whatever the ignore
+  files say. Hence one `app.tar`, which Docker's `ADD` unpacks.
+- The image runs as root because the mounted disk at `/app/data` is root-owned.
+- Must be built on Linux: Next's standalone output embeds absolute build paths, and the Linux
+  better-sqlite3 prebuild must be present.
+- From a machine behind a foreign VPN, `*.liara.run` may fail TLS or return 503 from the proxy; test with
+  `curl --noproxy '*' --resolve mizan.liara.run:443:<ip>` (IP via `nslookup mizan.liara.run 1.1.1.1`).
+- Apps on a team need `--team-id`; the feature-bundle names are `free|basic|standard|pro`.
+
+## Route B: build on the server (any Docker host; on Liara needs a bigger build-time bundle)
+
 One Docker image (Next.js `standalone` output) that contains:
 
 - the app, and
@@ -18,11 +44,10 @@ The CSVs are never deployed; only the packed catalog is.
 ```bash
 # put shops.csv, products.csv, offers.csv in ./dataset (or set DATASET_DIR)
 npm run catalog        # -> catalog/catalog.db   (~3 min)
-npm run catalog:pack   # -> catalog/catalog.db.xz (~73 MB, needs the `xz` CLI; Git Bash has it)
 ```
 
-`catalog/catalog.db.xz` is git-ignored (too big for git) but **is** uploaded by `liara deploy`
-(see `.liaraignore`) and unpacked by the Dockerfile.
+`catalog/catalog.db` is git-ignored (too big for git) but **is** uploaded by `liara deploy`
+(see `.liaraignore`; ~90 MB gzipped) and copied into the image by the Dockerfile.
 
 ## 1. Liara
 
@@ -43,11 +68,12 @@ npm run catalog:pack   # -> catalog/catalog.db.xz (~73 MB, needs the `xz` CLI; G
    ```
    Without them the assistant runs fully rule-based (intent parsing, call simulation, chat answers).
    Iranian servers often can't reach foreign AI APIs; use an OpenAI-compatible gateway reachable from Liara.
-5. Deploy from the repo root (with `catalog/catalog.db.xz` present):
+5. Deploy from the repo root (with `catalog/catalog.db` present):
    ```bash
    liara deploy
    ```
-   The upload is ~75 MB; the image build (npm ci + unpack + next build) takes a few minutes.
+   The upload is ~90 MB; the image build (npm ci + next build) takes several minutes on Liara, which is
+   more than the basic bundle allows. Use route A there.
 6. Smoke test:
    ```bash
    curl https://<app>.liara.run/api/health

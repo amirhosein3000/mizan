@@ -1,26 +1,30 @@
 # Mizan — production image (Next.js standalone output + the Torob catalog).
-# Prereq: catalog/catalog.db.xz exists (npm run catalog && npm run catalog:pack).
+# Prereq: catalog/catalog.db exists (npm run catalog). `liara deploy` gzips the upload (~90 MB).
 # Build:  docker build -t mizan .
 # Run:    docker run -p 3000:3000 -v mizan-data:/app/data --env-file .env mizan
+#
+# Kept fast on purpose (Liara caps build time): no compilers, no unpack step.
+# better-sqlite3 ships prebuilt binaries, so install scripts (a node-gyp rebuild) are skipped.
 
 FROM node:24-bookworm-slim AS deps
 WORKDIR /app
-# Build tools are only a fallback in case better-sqlite3 has no prebuilt binary; xz unpacks the catalog.
-RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ xz-utils \
-  && rm -rf /var/lib/apt/lists/*
 COPY package.json package-lock.json ./
-RUN npm ci --no-audit --no-fund
+# npm can leave optional WASM deps (@emnapi/*) out of a lock file made on Windows; `npm ci` then
+# refuses on Linux. Fall back to a regular install from the same lock in that case.
+RUN npm ci --ignore-scripts --no-audit --no-fund || npm install --ignore-scripts --no-audit --no-fund
 
 FROM deps AS build
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
-COPY . .
+# Only what `next build` needs, so the 180 MB catalog doesn't pass through this stage.
+COPY package.json next.config.ts tsconfig.json ./
+COPY public ./public
+COPY src ./src
 # NEXT_PUBLIC_* values are inlined at build time (feature flags).
 ARG NEXT_PUBLIC_FEATURES_OFF=""
 ARG NEXT_PUBLIC_FEATURES_ON=""
 ENV NEXT_PUBLIC_FEATURES_OFF=$NEXT_PUBLIC_FEATURES_OFF NEXT_PUBLIC_FEATURES_ON=$NEXT_PUBLIC_FEATURES_ON
-RUN test -f catalog/catalog.db.xz || (echo "catalog/catalog.db.xz missing: run 'npm run catalog && npm run catalog:pack'" && exit 1)
-RUN xz -d -T0 catalog/catalog.db.xz && ls -la catalog
+# The build doesn't read the catalog; it is copied into the final image below.
 RUN npm run build
 
 FROM node:24-bookworm-slim AS run
@@ -35,8 +39,10 @@ RUN mkdir -p /app/data /app/catalog && chown -R node:node /app
 COPY --from=build --chown=node:node /app/public ./public
 COPY --from=build --chown=node:node /app/.next/standalone ./
 COPY --from=build --chown=node:node /app/.next/static ./.next/static
+# The native binding is located at runtime, so make sure the Linux prebuild is present.
+COPY --from=build --chown=node:node /app/node_modules/better-sqlite3/prebuilds/linux-x64.node ./node_modules/better-sqlite3/prebuilds/linux-x64.node
 # Read-only catalog lives outside /app/data (that path is the persistent disk for user data).
-COPY --from=build --chown=node:node /app/catalog/catalog.db ./catalog/catalog.db
+COPY --chown=node:node catalog/catalog.db ./catalog/catalog.db
 USER node
 EXPOSE 3000
 VOLUME ["/app/data"]

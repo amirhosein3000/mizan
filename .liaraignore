@@ -1,12 +1,12 @@
-# What `liara deploy` does NOT upload. Unlike .gitignore, the packed catalog
-# (catalog/catalog.db.xz, ~73 MB) must be uploaded: the Docker build unpacks it.
+# What `liara deploy` does NOT upload. Unlike .gitignore, the catalog (catalog/catalog.db, 180 MB,
+# ~90 MB in the gzipped upload) must be uploaded: the image copies it as is.
 node_modules
 .next
 .git
 .claude
 data
 dataset
-catalog/*.db
+catalog/*.xz
 catalog/*.db-*
 catalog/*.tmp
 .env
